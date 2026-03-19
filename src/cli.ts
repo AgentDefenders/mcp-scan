@@ -10,6 +10,7 @@ import { discoverAllServers } from './discovery/index.js'
 import { analyzeAll, computeGrade } from './analyzers/index.js'
 import { printConsoleReport } from './reporters/console.js'
 import { formatJSON, printJSONReport } from './reporters/json.js'
+import { printSARIFReport } from './reporters/sarif.js'
 import { runWatchMode } from './drift/index.js'
 import type { ScanResult } from './types.js'
 
@@ -22,7 +23,7 @@ program
   .description('MCP supply chain scanner: detect tool poisoning, prompt injection, and shadowing attacks')
   .version(SCANNER_VERSION)
   .option('--config <path>', 'Path to a specific MCP config file (skips auto-discovery)')
-  .option('--format <format>', 'Output format: console or json', 'console')
+  .option('--format <format>', 'Output format: console, json, or sarif', 'console')
   .option('--fail-on <severity>', 'Exit with code 1 if findings at or above this severity are found')
   .option('--api-key <key>', 'Shield API key (shld_xxx) for uploading results to the dashboard')
   .option('--api-base <url>', 'Shield API base URL (default: https://api.agentdefenders.ai)')
@@ -58,6 +59,8 @@ program
 
     if (opts.format === 'json') {
       printJSONReport(result)
+    } else if (opts.format === 'sarif') {
+      printSARIFReport(result)
     } else {
       printConsoleReport(result)
     }
