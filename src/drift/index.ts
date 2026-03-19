@@ -3,7 +3,65 @@ import * as path from 'path'
 import * as crypto from 'crypto'
 import * as os from 'os'
 import { discoverAllServers } from '../discovery/index.js'
-import type { DriftEvent, DriftOptions, ToolBaseline, MCPServer } from '../types.js'
+import { computeGrade } from '../analyzers/index.js'
+import type { DriftEvent, DriftOptions, ToolBaseline, MCPServer, Severity, Grade, Finding } from '../types.js'
+
+/** A finding produced from a drift event, shaped for the scan results API. */
+interface DriftFinding {
+  server_name: string
+  tool_name: string
+  event_type: DriftEvent['event_type']
+  severity: Severity
+  old_hash?: string
+  new_hash?: string
+  detected_at: string
+}
+
+/** Payload sent to POST /api/v1/scans for a drift detection result. */
+interface DriftScanPayload {
+  scan_type: 'mcp_drift'
+  overall_grade: Grade
+  finding_count: number
+  findings: string    // JSON-stringified DriftFinding[]
+  scanner_version: string
+  raw_result: string  // JSON-stringified original DriftEvent[]
+}
+
+const DRIFT_SEVERITY: Record<DriftEvent['event_type'], Severity> = {
+  description_changed: 'high',
+  removed: 'high',
+  schema_changed: 'medium',
+  added: 'low',
+}
+
+/**
+ * Convert a list of drift events into a scan result payload for POST /api/v1/scans.
+ * Exported for testing.
+ */
+export function buildDriftScanPayload(events: DriftEvent[]): DriftScanPayload {
+  const findings: DriftFinding[] = events.map((e) => ({
+    server_name: e.server_name,
+    tool_name: e.tool_name,
+    event_type: e.event_type,
+    severity: DRIFT_SEVERITY[e.event_type] ?? 'medium',
+    old_hash: e.old_hash,
+    new_hash: e.new_hash,
+    detected_at: e.detected_at,
+  }))
+
+  // computeGrade only reads .severity, so casting DriftFinding[] to Finding[]
+  // is safe — the rest of the Finding fields are never accessed.
+  const grade = computeGrade(findings as unknown as Finding[])
+
+  return {
+    scan_type: 'mcp_drift',
+    overall_grade: grade,
+    finding_count: findings.length,
+    findings: JSON.stringify(findings),
+    scanner_version: '0.1.0',
+    raw_result: JSON.stringify(events),
+  }
+}
 
 /**
  * Compute a SHA-256 hash of a string value.
@@ -133,27 +191,27 @@ function detectDrift(servers: MCPServer[], baseline: Map<string, ToolBaseline>):
 }
 
 /**
- * Post a drift event to the Shield API internal endpoint.
+ * Upload a batch of drift events as a single mcp_drift scan result to POST /api/v1/scans.
+ * Uses Authorization: Bearer (dashboard auth group) instead of X-Shield-Internal-Secret.
+ * Drift events are scan results, not canary triggers — they don't have a canary_token_id.
  */
-async function postDriftEvent(event: DriftEvent, apiKey: string, apiBase: string): Promise<void> {
+async function postDriftScan(events: DriftEvent[], apiKey: string, apiBase: string): Promise<void> {
+  if (events.length === 0) return
+  const payload = buildDriftScanPayload(events)
   try {
-    await fetch(`${apiBase}/api/v1/internal/mcp-tool-trigger`, {
+    const res = await fetch(`${apiBase}/api/v1/scans`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Shield-Internal-Secret': apiKey,
+        Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-        event_type: event.event_type,
-        server_name: event.server_name,
-        tool_name: event.tool_name,
-        old_hash: event.old_hash,
-        new_hash: event.new_hash,
-        detected_at: event.detected_at,
-      }),
+      body: JSON.stringify(payload),
     })
+    if (!res.ok) {
+      console.error(`drift: failed to upload scan result: HTTP ${res.status}`)
+    }
   } catch (err) {
-    console.error(`drift: failed to post event: ${err instanceof Error ? err.message : String(err)}`)
+    console.error(`drift: failed to upload scan result: ${err instanceof Error ? err.message : String(err)}`)
   }
 }
 
@@ -188,9 +246,9 @@ export async function runWatchMode(opts: DriftOptions): Promise<void> {
 
     for (const event of driftEvents) {
       console.log(`drift: ${event.event_type}  ${event.server_name}/${event.tool_name}  ${event.detected_at}`)
-      if (opts.apiKey) {
-        await postDriftEvent(event, opts.apiKey, apiBase)
-      }
+    }
+    if (opts.apiKey && driftEvents.length > 0) {
+      await postDriftScan(driftEvents, opts.apiKey, apiBase)
     }
   }
 
