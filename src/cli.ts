@@ -33,7 +33,7 @@ program
     if (opts.watch) {
       await runWatchMode({
         intervalSeconds: parseInt(opts.interval, 10) || 300,
-        apiKey: opts.apiKey,
+        apiKey: opts.apiKey || process.env.SHIELD_API_KEY,
         apiBase: opts.apiBase,
         baselineFile: path.join(os.homedir(), '.config', 'sysmond', 'mcp_baselines.json'),
       })
@@ -62,9 +62,10 @@ program
       printConsoleReport(result)
     }
 
-    // Upload result if API key is provided.
-    if (opts.apiKey) {
-      await uploadScanResult(result, opts.apiKey, opts.apiBase || 'https://api.agentdefenders.ai')
+    // Upload result if API key is provided via flag or SHIELD_API_KEY env var.
+    const apiKey = opts.apiKey || process.env.SHIELD_API_KEY
+    if (apiKey) {
+      await uploadScanResult(result, apiKey, opts.apiBase || 'https://api.agentdefenders.ai')
     }
 
     // Exit code enforcement.
