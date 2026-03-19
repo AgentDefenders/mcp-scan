@@ -67,6 +67,12 @@ describe('discoverVSCodeServers', () => {
     }
   })
 
+  it('returns empty array when mcpServers key is absent', () => {
+    withTempConfig({}, (p) => {
+      expect(discoverVSCodeServers(p)).toEqual([])
+    })
+  })
+
   it('parses mcpServers and returns server list', () => {
     withTempConfig({
       mcpServers: {
