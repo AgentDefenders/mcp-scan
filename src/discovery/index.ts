@@ -1,17 +1,19 @@
 import type { MCPServer } from '../types.js'
 import { discoverClaudeServers } from './claude.js'
 import { discoverCursorServers } from './cursor.js'
+import { discoverWindsurfServers } from './windsurf.js'
+import { discoverVSCodeServers } from './vscode.js'
 
 export interface DiscoveryOptions {
   /** Path to a specific config file to scan (bypasses auto-discovery). */
   configFile?: string
   /** Which client configs to discover from. Default: all supported. */
-  clients?: ('claude' | 'cursor')[]
+  clients?: ('claude' | 'cursor' | 'windsurf' | 'vscode')[]
 }
 
 /**
  * Discover all MCP servers from supported client configurations.
- * Deduplicates servers with the same name.
+ * Deduplicates servers with the same name across clients.
  */
 export function discoverAllServers(opts: DiscoveryOptions = {}): MCPServer[] {
   const servers: MCPServer[] = []
@@ -29,12 +31,14 @@ export function discoverAllServers(opts: DiscoveryOptions = {}): MCPServer[] {
     return servers
   }
 
-  const clients = opts.clients ?? ['claude', 'cursor']
+  const clients = opts.clients ?? ['claude', 'cursor', 'windsurf', 'vscode']
 
   for (const client of clients) {
     let discovered: MCPServer[] = []
-    if (client === 'claude') discovered = discoverClaudeServers()
-    if (client === 'cursor') discovered = discoverCursorServers()
+    if (client === 'claude')    discovered = discoverClaudeServers()
+    if (client === 'cursor')    discovered = discoverCursorServers()
+    if (client === 'windsurf')  discovered = discoverWindsurfServers()
+    if (client === 'vscode')    discovered = discoverVSCodeServers()
 
     for (const s of discovered) {
       const key = `${client}:${s.name}`
