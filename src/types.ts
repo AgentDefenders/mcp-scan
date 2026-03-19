@@ -5,7 +5,7 @@ export type Severity = 'critical' | 'high' | 'medium' | 'low'
 export type Grade = 'A' | 'B' | 'C' | 'D' | 'F'
 
 /** Analyzer that produced a finding. */
-export type AnalyzerName = 'tool-poisoning' | 'prompt-injection' | 'shadowing'
+export type AnalyzerName = 'tool-poisoning' | 'prompt-injection' | 'shadowing' | 'suspicious-env'
 
 /** A single security finding from the scanner. */
 export interface Finding {
