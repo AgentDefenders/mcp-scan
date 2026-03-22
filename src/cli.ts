@@ -29,6 +29,7 @@ program
   .option('--api-base <url>', 'Shield API base URL (default: https://api.agentdefenders.ai)')
   .option('--watch', 'Run in drift detection mode (polls at --interval seconds)')
   .option('--interval <seconds>', 'Polling interval for --watch mode', '300')
+  .option('--quiet', 'Suppress CTA output (for CI environments)')
   .action(async (opts) => {
     // Drift detection mode.
     if (opts.watch) {
@@ -57,6 +58,7 @@ program
       scanner_version: SCANNER_VERSION,
     }
 
+    // Print format output.
     if (opts.format === 'json') {
       printJSONReport(result)
     } else if (opts.format === 'sarif') {
@@ -67,8 +69,23 @@ program
 
     // Upload result if API key is provided via flag or SHIELD_API_KEY env var.
     const apiKey = opts.apiKey || process.env.SHIELD_API_KEY
+    let uploadedId: string | null = null
     if (apiKey) {
-      await uploadScanResult(result, apiKey, opts.apiBase || 'https://api.agentdefenders.ai')
+      uploadedId = await uploadScanResult(result, apiKey, opts.apiBase || 'https://api.agentdefenders.ai')
+    }
+
+    // Print CTA only in console format and when not quiet.
+    if (opts.format !== 'json' && opts.format !== 'sarif' && !opts.quiet) {
+      if (!apiKey) {
+        console.log('')
+        console.log('  Track your security grade over time: https://app.agentdefenders.ai/signup')
+      } else if (uploadedId) {
+        console.log('')
+        console.log(`  View full report: https://app.agentdefenders.ai/scanner/${uploadedId}`)
+      } else {
+        console.log('')
+        console.log('  Failed to upload scan result. Check your API key and try again.')
+      }
     }
 
     // Exit code enforcement.
@@ -89,8 +106,9 @@ program.parse()
 
 /**
  * Upload scan result to the Shield API dashboard.
+ * Returns the scan id on success, or null on failure.
  */
-async function uploadScanResult(result: ScanResult, apiKey: string, apiBase: string): Promise<void> {
+async function uploadScanResult(result: ScanResult, apiKey: string, apiBase: string): Promise<string | null> {
   try {
     const res = await fetch(`${apiBase}/api/v1/scans`, {
       method: 'POST',
@@ -109,13 +127,16 @@ async function uploadScanResult(result: ScanResult, apiKey: string, apiBase: str
     })
     if (!res.ok) {
       console.error(`Failed to upload scan result: HTTP ${res.status}`)
+      return null
     } else {
       const body = await res.json() as { id?: string }
       if (process.env.MCP_SCAN_DEBUG) {
         console.error(`Scan result uploaded: ${body.id}`)
       }
+      return body.id ?? null
     }
   } catch (err) {
     console.error(`Failed to upload scan result: ${err instanceof Error ? err.message : String(err)}`)
+    return null
   }
 }

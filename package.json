@@ -2,6 +2,11 @@
   "name": "@agentdefenders/mcp-scan",
   "version": "0.1.0",
   "description": "MCP supply chain scanner - detect tool poisoning, prompt injection, and shadowing attacks",
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
   "bin": {
     "mcp-scan": "./dist/cli.js"
   },

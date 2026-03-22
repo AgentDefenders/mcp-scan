@@ -55,6 +55,9 @@ export function printConsoleReport(result: ScanResult): void {
         const evidenceSnippet = finding.evidence.slice(0, 80)
         console.log(`              Evidence: ${evidenceSnippet}${finding.evidence.length > 80 ? '...' : ''}`)
       }
+      if (finding.remediation) {
+        console.log(`              Remediation: ${finding.remediation}`)
+      }
     }
     console.log('')
   }

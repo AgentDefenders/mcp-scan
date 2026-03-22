@@ -1,5 +1,9 @@
 import type { Finding, MCPServer, Severity } from '../types.js'
 
+/** Remediation guidance for suspicious-env findings. */
+const SUSPICIOUS_ENV_REMEDIATION =
+  'This MCP server accesses sensitive environment variables at runtime. Review whether the server legitimately needs these variables. Consider using a sandboxed environment or restricting env var access.'
+
 interface EnvRule {
   pattern: RegExp
   severity: Severity
@@ -86,6 +90,7 @@ export function analyzeSuspiciousEnv(server: MCPServer): Finding[] {
           description: rule.description,
           field: `env.${envVar}`,
           evidence: `${envVar}=${value.slice(0, 60)}`,
+          remediation: SUSPICIOUS_ENV_REMEDIATION,
         })
         break
       }

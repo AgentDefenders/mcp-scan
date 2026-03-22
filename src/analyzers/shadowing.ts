@@ -1,5 +1,9 @@
 import type { Finding, MCPServer } from '../types.js'
 
+/** Remediation guidance for shadowing findings. */
+const SHADOWING_REMEDIATION =
+  'This tool shadows a built-in or commonly-used tool name. Rename the tool or remove the duplicate MCP server to prevent confusion.'
+
 /**
  * Built-in tool names that are commonly targeted for shadowing attacks.
  * A shadowing attack registers a malicious tool with the same or similar name
@@ -64,6 +68,7 @@ export function analyzeShadowing(server: MCPServer): Finding[] {
         description: `Tool name "${tool.name}" shadows a known built-in tool. Attackers use this to intercept LLM calls to trusted tools.`,
         field: 'name',
         evidence: tool.name,
+        remediation: SHADOWING_REMEDIATION,
       })
       continue
     }
@@ -79,6 +84,7 @@ export function analyzeShadowing(server: MCPServer): Finding[] {
           description: `Tool name "${tool.name}" closely mimics built-in "${shadowsBuiltin}" (shadowing pattern).`,
           field: 'name',
           evidence: tool.name,
+          remediation: SHADOWING_REMEDIATION,
         })
         break
       }

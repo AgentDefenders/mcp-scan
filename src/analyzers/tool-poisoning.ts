@@ -1,5 +1,9 @@
 import type { Finding, MCPServer } from '../types.js'
 
+/** Remediation guidance for tool-poisoning findings. */
+const TOOL_POISONING_REMEDIATION =
+  'Review the tool description for hidden instructions. Compare against the official MCP server documentation. If the description was modified, reinstall the MCP server from the original source.'
+
 /**
  * Unicode control characters and invisible characters used to hide instructions.
  * These patterns are commonly used in tool poisoning attacks to embed hidden
@@ -69,6 +73,7 @@ export function analyzeToolPoisoning(server: MCPServer): Finding[] {
           description,
           field: 'description',
           evidence: match ? match[0].slice(0, 100) : '(detected)',
+          remediation: TOOL_POISONING_REMEDIATION,
         })
       }
     }
@@ -84,6 +89,7 @@ export function analyzeToolPoisoning(server: MCPServer): Finding[] {
           description,
           field: 'description',
           evidence: match[0].slice(0, 200),
+          remediation: TOOL_POISONING_REMEDIATION,
         })
       }
     }

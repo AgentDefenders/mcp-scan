@@ -3,12 +3,13 @@ import { discoverClaudeServers } from './claude.js'
 import { discoverCursorServers } from './cursor.js'
 import { discoverWindsurfServers } from './windsurf.js'
 import { discoverVSCodeServers } from './vscode.js'
+import { discoverGeminiServers } from './gemini.js'
 
 export interface DiscoveryOptions {
   /** Path to a specific config file to scan (bypasses auto-discovery). */
   configFile?: string
   /** Which client configs to discover from. Default: all supported. */
-  clients?: ('claude' | 'cursor' | 'windsurf' | 'vscode')[]
+  clients?: ('claude' | 'cursor' | 'windsurf' | 'vscode' | 'gemini')[]
 }
 
 /**
@@ -31,7 +32,7 @@ export function discoverAllServers(opts: DiscoveryOptions = {}): MCPServer[] {
     return servers
   }
 
-  const clients = opts.clients ?? ['claude', 'cursor', 'windsurf', 'vscode']
+  const clients = opts.clients ?? ['claude', 'cursor', 'windsurf', 'vscode', 'gemini']
 
   for (const client of clients) {
     let discovered: MCPServer[] = []
@@ -39,6 +40,7 @@ export function discoverAllServers(opts: DiscoveryOptions = {}): MCPServer[] {
     if (client === 'cursor')    discovered = discoverCursorServers()
     if (client === 'windsurf')  discovered = discoverWindsurfServers()
     if (client === 'vscode')    discovered = discoverVSCodeServers()
+    if (client === 'gemini')    discovered = discoverGeminiServers()
 
     for (const s of discovered) {
       const key = `${client}:${s.name}`

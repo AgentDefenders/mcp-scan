@@ -23,6 +23,8 @@ export interface Finding {
   field: string
   /** The matched pattern or snippet that triggered the finding. */
   evidence: string
+  /** Concrete remediation steps for the finding. */
+  remediation: string
 }
 
 /** Per-server scan summary. */

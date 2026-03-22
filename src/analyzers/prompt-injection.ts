@@ -1,5 +1,9 @@
 import type { Finding, MCPServer } from '../types.js'
 
+/** Remediation guidance for prompt-injection findings. */
+const PROMPT_INJECTION_REMEDIATION =
+  'The tool description contains instructions that could manipulate the AI model. Remove or sanitize the injected content. Pin the MCP server version to prevent future modifications.'
+
 /**
  * Prompt injection patterns: strings that attempt to override the LLM's
  * instructions or manipulate its behavior through the tool description.
@@ -64,6 +68,7 @@ export function analyzePromptInjection(server: MCPServer): Finding[] {
           description,
           field: 'description',
           evidence: match[0].slice(0, 200),
+          remediation: PROMPT_INJECTION_REMEDIATION,
         })
       }
     }

@@ -4,6 +4,7 @@ import * as path from 'path'
 import { describe, it, expect } from 'vitest'
 import { discoverWindsurfServers } from '../src/discovery/windsurf.js'
 import { discoverVSCodeServers } from '../src/discovery/vscode.js'
+import { discoverGeminiServers } from '../src/discovery/gemini.js'
 
 function withTempConfig(content: object, fn: (p: string) => void): void {
   const tmpFile = path.join(os.tmpdir(), `mcp-scan-test-${Date.now()}.json`)
@@ -83,6 +84,45 @@ describe('discoverVSCodeServers', () => {
       expect(servers).toHaveLength(1)
       expect(servers[0].name).toBe('github')
       expect(servers[0].command).toBe('npx')
+    })
+  })
+})
+
+describe('discoverGeminiServers', () => {
+  it('returns servers when config exists with mcpServers', () => {
+    withTempConfig({
+      mcpServers: {
+        'my-tool': { command: 'node', args: ['server.js'] },
+        'other-tool': { command: 'python', args: ['-m', 'server'] },
+      },
+    }, (p) => {
+      const servers = discoverGeminiServers(p)
+      expect(servers).toHaveLength(2)
+      expect(servers[0].name).toBe('my-tool')
+      expect(servers[0].command).toBe('node')
+      expect(servers[1].name).toBe('other-tool')
+    })
+  })
+
+  it('returns empty array when mcpServers is empty object', () => {
+    withTempConfig({ mcpServers: {} }, (p) => {
+      expect(discoverGeminiServers(p)).toEqual([])
+    })
+  })
+
+  it('returns empty array for malformed JSON', () => {
+    const tmpFile = path.join(os.tmpdir(), `mcp-gemini-bad-${Date.now()}.json`)
+    fs.writeFileSync(tmpFile, 'NOT JSON')
+    try {
+      expect(discoverGeminiServers(tmpFile)).toEqual([])
+    } finally {
+      fs.unlinkSync(tmpFile)
+    }
+  })
+
+  it('returns empty array when mcpServers key is missing', () => {
+    withTempConfig({}, (p) => {
+      expect(discoverGeminiServers(p)).toEqual([])
     })
   })
 })

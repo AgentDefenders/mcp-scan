@@ -25,6 +25,7 @@ const scanWithFindings: ScanResult = {
       description: 'Zero-width Unicode character detected in tool description',
       field: 'description',
       evidence: '\u200b',
+      remediation: 'Review the tool description for hidden instructions.',
     },
     {
       analyzer: 'shadowing',
@@ -34,6 +35,7 @@ const scanWithFindings: ScanResult = {
       description: 'Tool name shadows built-in: bash',
       field: 'name',
       evidence: 'bash',
+      remediation: 'Rename the tool or remove the duplicate MCP server.',
     },
   ],
   scanner_version: '0.1.0',

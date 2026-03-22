@@ -126,6 +126,6 @@ describe('grade computation', () => {
   })
 
   it('returns B for low findings only', () => {
-    expect(computeGrade([{ analyzer: 'shadowing', severity: 'low', server_name: 'x', tool_name: 'y', description: 'd', field: 'name', evidence: 'e' }])).toBe('B')
+    expect(computeGrade([{ analyzer: 'shadowing', severity: 'low', server_name: 'x', tool_name: 'y', description: 'd', field: 'name', evidence: 'e', remediation: '' }])).toBe('B')
   })
 })
