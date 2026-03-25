@@ -10,6 +10,10 @@
   "bin": {
     "mcp-scan": "./dist/cli.js"
   },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
