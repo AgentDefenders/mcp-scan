@@ -140,14 +140,28 @@ program
 
     // Print CTA only in console format and when not quiet.
     if (opts.format !== 'json' && opts.format !== 'sarif' && !isQuiet) {
+      const DIM = '\x1b[2m'
+      const CYAN = '\x1b[36m'
+      const GREEN = '\x1b[92m'
+      const BOLD = '\x1b[1m'
+      const RST = '\x1b[0m'
+
       if (!apiKey) {
-        console.log('Track your security posture: https://app.agentdefenders.ai/scanner')
+        console.log(`${DIM}---${RST}`)
+        console.log(`${BOLD}Track your results on the Shield dashboard:${RST}`)
+        console.log(`  ${GREEN}1.${RST} Sign up:     ${CYAN}https://app.agentdefenders.ai${RST}`)
+        console.log(`  ${GREEN}2.${RST} Get API key: ${DIM}Settings > API Keys${RST}`)
+        console.log(`  ${GREEN}3.${RST} Re-run:      ${CYAN}npx @agentdefenders/mcp-scan --api-key shld_xxx${RST}`)
+        console.log('')
       } else if (uploadedId) {
-        console.log(`View full report: https://app.agentdefenders.ai/scanner/${uploadedId}`)
+        console.log(`${DIM}---${RST}`)
+        console.log(`${GREEN}Scan uploaded.${RST} View full report:`)
+        console.log(`  ${CYAN}https://app.agentdefenders.ai/scanner/${uploadedId}${RST}`)
+        console.log('')
       } else {
         console.log('Failed to upload scan result. Check your API key and try again.')
+        console.log('')
       }
-      console.log('')
     }
 
     // Exit code enforcement. CI mode defaults to --fail-on high.
