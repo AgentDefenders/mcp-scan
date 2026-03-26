@@ -4,12 +4,29 @@ import { discoverCursorServers } from './cursor.js'
 import { discoverWindsurfServers } from './windsurf.js'
 import { discoverVSCodeServers } from './vscode.js'
 import { discoverGeminiServers } from './gemini.js'
+import { discoverClineServers } from './cline.js'
+import { discoverJetBrainsServers } from './jetbrains.js'
+import { discoverContinueServers } from './continue.js'
+import { discoverAntigravityServers } from './antigravity.js'
+import { discoverZedServers } from './zed.js'
+import { discoverAmazonQServers } from './amazonq.js'
+
+/** All supported MCP client identifiers. */
+export type ClientId =
+  | 'claude' | 'cursor' | 'windsurf' | 'vscode' | 'gemini'
+  | 'cline' | 'jetbrains' | 'continue' | 'antigravity' | 'zed' | 'amazonq'
+
+/** All client IDs in discovery order. */
+const ALL_CLIENTS: ClientId[] = [
+  'claude', 'cursor', 'windsurf', 'vscode', 'gemini',
+  'cline', 'jetbrains', 'continue', 'antigravity', 'zed', 'amazonq',
+]
 
 export interface DiscoveryOptions {
   /** Path to a specific config file to scan (bypasses auto-discovery). */
   configFile?: string
   /** Which client configs to discover from. Default: all supported. */
-  clients?: ('claude' | 'cursor' | 'windsurf' | 'vscode' | 'gemini')[]
+  clients?: ClientId[]
 }
 
 /**
@@ -32,15 +49,27 @@ export function discoverAllServers(opts: DiscoveryOptions = {}): MCPServer[] {
     return servers
   }
 
-  const clients = opts.clients ?? ['claude', 'cursor', 'windsurf', 'vscode', 'gemini']
+  const clients = opts.clients ?? ALL_CLIENTS
+
+  /** Map client ID to its discovery function. */
+  const discoverers: Record<ClientId, () => MCPServer[]> = {
+    claude:       discoverClaudeServers,
+    cursor:       discoverCursorServers,
+    windsurf:     discoverWindsurfServers,
+    vscode:       discoverVSCodeServers,
+    gemini:       discoverGeminiServers,
+    cline:        discoverClineServers,
+    jetbrains:    discoverJetBrainsServers,
+    continue:     discoverContinueServers,
+    antigravity:  discoverAntigravityServers,
+    zed:          discoverZedServers,
+    amazonq:      discoverAmazonQServers,
+  }
 
   for (const client of clients) {
-    let discovered: MCPServer[] = []
-    if (client === 'claude')    discovered = discoverClaudeServers()
-    if (client === 'cursor')    discovered = discoverCursorServers()
-    if (client === 'windsurf')  discovered = discoverWindsurfServers()
-    if (client === 'vscode')    discovered = discoverVSCodeServers()
-    if (client === 'gemini')    discovered = discoverGeminiServers()
+    const discover = discoverers[client]
+    if (!discover) continue
+    const discovered = discover()
 
     for (const s of discovered) {
       const key = `${client}:${s.name}`

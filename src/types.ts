@@ -76,6 +76,7 @@ export interface MCPServer {
   tools?: MCPTool[]
   /** Which client configuration this server was discovered in. */
   source_client?: 'claude' | 'cursor' | 'windsurf' | 'vscode' | 'gemini'
+    | 'cline' | 'jetbrains' | 'continue' | 'antigravity' | 'zed' | 'amazonq'
   /** Transport mechanism used by this server. */
   transport?: 'stdio' | 'sse' | 'unknown'
 }

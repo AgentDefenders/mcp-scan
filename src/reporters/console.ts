@@ -18,6 +18,9 @@ const RESET = '\x1b[0m'
 const BOLD = '\x1b[1m'
 const DIM = '\x1b[2m'
 const GREEN = '\x1b[32m'
+const BRIGHT_GREEN = '\x1b[92m'
+const CYAN = '\x1b[36m'
+const WHITE = '\x1b[97m'
 
 /** All analyzer names used to display the pass checklist for clean servers. */
 const ALL_ANALYZERS = ['tool-poisoning', 'prompt-injection', 'shadowing', 'suspicious-env', 'known-threats'] as const
@@ -29,6 +32,12 @@ const CLIENT_DISPLAY_NAMES: Record<string, string> = {
   vscode: 'VS Code',
   windsurf: 'Windsurf',
   gemini: 'Gemini CLI',
+  cline: 'Cline',
+  jetbrains: 'JetBrains',
+  continue: 'Continue',
+  antigravity: 'Antigravity',
+  zed: 'Zed',
+  amazonq: 'Amazon Q',
 }
 
 /** Grade explanation messages. */
@@ -89,6 +98,35 @@ function colorize(text: string, color: string): string {
 }
 
 /**
+ * Print the AgentDefenders sentinel banner.
+ * ASCII art shield inspired by the sentinel mark logo.
+ * Only shown in interactive console mode, not --quiet or structured formats.
+ */
+export function printBanner(version: string): void {
+  const g = BRIGHT_GREEN
+  const c = CYAN
+  const w = WHITE
+  const d = DIM
+  const r = RESET
+
+  // Claude Code CLI style: clean single-line icon + bold product name + dim metadata.
+  // The sentinel diamond is our brand mark, rendered as a simple inline glyph.
+  const lines = [
+    ``,
+    `  ${g}◇${r} ${w}${BOLD}AgentDefenders${r} ${c}mcp-scan${r} ${d}v${version}${r}`,
+    ``,
+    `  ${d}MCP supply chain security scanner${r}`,
+    `  ${d}Detects tool poisoning, prompt injection, shadowing, and known threats.${r}`,
+    `  ${d}All analysis runs locally. No data leaves your machine.${r}`,
+    ``,
+  ]
+
+  for (const line of lines) {
+    console.log(line)
+  }
+}
+
+/**
  * Print a human-readable scan report to stdout.
  * Uses ANSI color codes for terminal output.
  */
@@ -109,8 +147,7 @@ export function printConsoleReport(result: ScanResult, servers?: MCPServer[]): v
     .map((c) => CLIENT_DISPLAY_NAMES[c] || c)
     .join(', ')
 
-  console.log('')
-  console.log(`${BOLD}MCP Security Scan${RESET}  v${result.scanner_version}  ${new Date(result.scanned_at).toLocaleString()}`)
+  console.log(`${BOLD}MCP Security Scan${RESET}  ${new Date(result.scanned_at).toLocaleString()}`)
   const clientSuffix = clientDisplay ? ` (${clientDisplay})` : ''
   console.log(`Scanned ${result.servers.length} server${result.servers.length !== 1 ? 's' : ''} across ${clientNames.length} client${clientNames.length !== 1 ? 's' : ''}${clientSuffix}`)
   console.log('')

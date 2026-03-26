@@ -9,7 +9,7 @@ import * as os from 'os'
 import { discoverAllServers } from './discovery/index.js'
 import { analyzeAll, computeGrade } from './analyzers/index.js'
 import { getKnownThreatCount } from './analyzers/known-threats.js'
-import { printConsoleReport } from './reporters/console.js'
+import { printBanner, printConsoleReport } from './reporters/console.js'
 import { formatJSON, printJSONReport } from './reporters/json.js'
 import { printSARIFReport } from './reporters/sarif.js'
 import { runWatchMode } from './drift/index.js'
@@ -51,6 +51,11 @@ program
         baselineFile: path.join(os.homedir(), '.config', 'sysmond', 'mcp_baselines.json'),
       })
       return
+    }
+
+    // Print banner in console mode when not quiet.
+    if (opts.format !== 'json' && opts.format !== 'sarif' && !opts.quiet) {
+      printBanner(SCANNER_VERSION)
     }
 
     // Capture start time for duration measurement.
