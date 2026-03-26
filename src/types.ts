@@ -5,7 +5,7 @@ export type Severity = 'critical' | 'high' | 'medium' | 'low'
 export type Grade = 'A' | 'B' | 'C' | 'D' | 'F'
 
 /** Analyzer that produced a finding. */
-export type AnalyzerName = 'tool-poisoning' | 'prompt-injection' | 'shadowing' | 'suspicious-env'
+export type AnalyzerName = 'tool-poisoning' | 'prompt-injection' | 'shadowing' | 'suspicious-env' | 'known-threats'
 
 /** A single security finding from the scanner. */
 export interface Finding {
@@ -35,6 +35,17 @@ export interface ServerScanResult {
   findings: Finding[]
 }
 
+/** Aggregate statistics for a scan run. */
+export interface ScanSummary {
+  total_servers: number
+  total_tools_analyzed: number
+  servers_with_findings: number
+  servers_clean: number
+  clients_discovered: string[]
+  known_threats_checked: number
+  scan_duration_ms: number
+}
+
 /** Complete result of a single mcp-scan run. */
 export interface ScanResult {
   /** Timestamp when the scan started. */
@@ -49,6 +60,8 @@ export interface ScanResult {
   findings: Finding[]
   /** Scanner version. */
   scanner_version: string
+  /** Aggregate scan summary statistics. */
+  summary?: ScanSummary
 }
 
 /** A discovered MCP server configuration. */
@@ -61,6 +74,10 @@ export interface MCPServer {
   env?: Record<string, string>
   /** Tools reported by the server (populated if --enumerate flag is used). */
   tools?: MCPTool[]
+  /** Which client configuration this server was discovered in. */
+  source_client?: 'claude' | 'cursor' | 'windsurf' | 'vscode' | 'gemini'
+  /** Transport mechanism used by this server. */
+  transport?: 'stdio' | 'sse' | 'unknown'
 }
 
 /** A discovered MCP tool definition. */

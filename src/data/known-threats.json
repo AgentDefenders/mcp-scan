@@ -1,0 +1,240 @@
+[
+  {
+    "id": "THREAT-001",
+    "name": "OpenClaw Gateway Token Theft",
+    "match_patterns": {
+      "commands": ["clawdbot", "moltbot"],
+      "server_names": ["openclaw", "clawbot"]
+    },
+    "severity": "critical",
+    "description": "OpenClaw Control UI trusts gatewayUrl query parameter without validation, allowing token theft via crafted links.",
+    "cve": "CVE-2026-25253",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2026-25253",
+    "remediation": "Update OpenClaw to version 2026.1.29 or later. Validate gateway URLs before connecting.",
+    "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-002",
+    "name": "ClawHub Credential Stealer -- env-dump skill",
+    "match_patterns": {
+      "commands": ["clawhub-skills"],
+      "server_names": ["clawhub-env-dump", "clawhub-creds"],
+      "args_contains": ["env-dump"]
+    },
+    "severity": "critical",
+    "description": "Malicious ClawHub skill that exfiltrates all environment variables including API keys and tokens to a remote endpoint.",
+    "remediation": "Remove the skill immediately. Rotate all API keys and tokens that were present in the environment.",
+    "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-003",
+    "name": "ClawHub Credential Stealer -- keychain-read skill",
+    "match_patterns": {
+      "commands": ["clawhub-skills"],
+      "server_names": ["clawhub-keychain", "clawhub-keychain-read"],
+      "args_contains": ["keychain-read"]
+    },
+    "severity": "critical",
+    "description": "Malicious ClawHub skill that reads system keychain entries and exfiltrates stored credentials.",
+    "remediation": "Remove the skill immediately. Change all passwords stored in the system keychain.",
+    "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-004",
+    "name": "ClawHub Credential Stealer -- ssh-key-grab skill",
+    "match_patterns": {
+      "commands": ["clawhub-skills"],
+      "server_names": ["clawhub-ssh-grab", "clawhub-ssh-keys"],
+      "args_contains": ["ssh-key-grab", "ssh-exfil"]
+    },
+    "severity": "critical",
+    "description": "Malicious ClawHub skill that reads and exfiltrates SSH private keys from the user home directory.",
+    "remediation": "Remove the skill immediately. Regenerate all SSH keys and revoke compromised public keys from authorized hosts.",
+    "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-005",
+    "name": "ClawHub Env Exfiltrator -- dotenv-sync skill",
+    "match_patterns": {
+      "commands": ["clawhub-skills"],
+      "server_names": ["clawhub-dotenv-sync"],
+      "args_contains": ["dotenv-sync", "env-exfil"]
+    },
+    "severity": "high",
+    "description": "Malicious ClawHub skill that searches for .env files across the filesystem and uploads their contents to a remote server.",
+    "remediation": "Remove the skill. Rotate all secrets found in .env files on the system.",
+    "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-006",
+    "name": "Supply Chain -- Suspicious npm package (hack pattern)",
+    "match_patterns": {
+      "commands": ["npx"],
+      "args_contains": ["hack-mcp", "mcp-hack", "hacktools-mcp"]
+    },
+    "severity": "high",
+    "description": "MCP server launched via npm package with suspicious name containing 'hack'. Likely malicious supply chain package.",
+    "remediation": "Remove the MCP server configuration. Verify the package source on npmjs.com before reinstalling.",
+    "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-007",
+    "name": "Supply Chain -- Suspicious npm package (exfil pattern)",
+    "match_patterns": {
+      "commands": ["npx"],
+      "args_contains": ["exfil-mcp", "mcp-exfil", "data-exfil"]
+    },
+    "severity": "critical",
+    "description": "MCP server launched via npm package with suspicious name containing 'exfil'. Likely a data exfiltration tool.",
+    "remediation": "Remove the MCP server configuration immediately. Audit system for signs of data exfiltration.",
+    "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-008",
+    "name": "Supply Chain -- Suspicious npm package (backdoor pattern)",
+    "match_patterns": {
+      "commands": ["npx"],
+      "args_contains": ["backdoor-mcp", "mcp-backdoor", "mcp-pwn", "pwn-mcp"]
+    },
+    "severity": "critical",
+    "description": "MCP server launched via npm package with suspicious name containing 'backdoor' or 'pwn'. Likely contains a remote access backdoor.",
+    "remediation": "Remove the MCP server configuration immediately. Scan system for persistence mechanisms. Consider reimaging the host.",
+    "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-009",
+    "name": "RCE via Command Injection -- semicolon in args",
+    "match_patterns": {
+      "args_contains": ["; curl ", "; wget ", ";curl ", ";wget ", "; bash ", ";bash "]
+    },
+    "severity": "critical",
+    "description": "MCP server arguments contain shell command injection via semicolon separator. Attacker can execute arbitrary commands.",
+    "remediation": "Remove the MCP server. Never pass untrusted input as command arguments. Sanitize all args for shell metacharacters.",
+    "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-010",
+    "name": "RCE via Command Injection -- pipe in args",
+    "match_patterns": {
+      "args_contains": ["| curl ", "| wget ", "|curl ", "|wget ", "| bash ", "|bash "]
+    },
+    "severity": "critical",
+    "description": "MCP server arguments contain shell command injection via pipe operator. Attacker can chain arbitrary commands.",
+    "remediation": "Remove the MCP server. Audit argument handling for shell injection vulnerabilities.",
+    "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-011",
+    "name": "RCE via Command Injection -- backtick or subshell in args",
+    "match_patterns": {
+      "args_contains": ["$(", "`curl", "`wget", "`bash"]
+    },
+    "severity": "critical",
+    "description": "MCP server arguments contain shell command injection via subshell or backtick execution. Attacker can execute arbitrary commands.",
+    "remediation": "Remove the MCP server. Ensure arguments are never passed through a shell interpreter.",
+    "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-012",
+    "name": "Dangerous Tool -- Unrestricted filesystem read access",
+    "match_patterns": {
+      "server_names": ["fs-read-all", "read-everything", "full-fs-access"],
+      "args_contains": ["--allow-read=/", "--root-access"]
+    },
+    "severity": "high",
+    "description": "MCP server requests unrestricted read access to the entire filesystem. This can expose sensitive files including credentials and private keys.",
+    "remediation": "Restrict filesystem access to specific directories. Use the principle of least privilege for file access permissions.",
+    "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-013",
+    "name": "Dangerous Tool -- Unrestricted network access",
+    "match_patterns": {
+      "server_names": ["net-unrestricted", "proxy-all"],
+      "args_contains": ["--allow-net=0.0.0.0/0", "--proxy-all-traffic"]
+    },
+    "severity": "high",
+    "description": "MCP server requests unrestricted network access. This can be used to exfiltrate data or establish reverse shells.",
+    "remediation": "Restrict network access to specific hosts and ports. Monitor outbound connections from MCP servers.",
+    "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-014",
+    "name": "Dangerous Tool -- Process execution without justification",
+    "match_patterns": {
+      "server_names": ["exec-anything", "shell-runner", "cmd-exec"],
+      "args_contains": ["--allow-exec=*", "--unrestricted-exec"]
+    },
+    "severity": "high",
+    "description": "MCP server has unrestricted process execution capability. This bypasses all sandboxing and allows arbitrary command execution.",
+    "remediation": "Restrict execution to specific binaries. Use allowlists for permitted commands.",
+    "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-015",
+    "name": "Dangerous Tool -- Clipboard and screenshot access",
+    "match_patterns": {
+      "server_names": ["clipboard-spy", "screen-capture-mcp"],
+      "args_contains": ["--capture-clipboard", "--screenshot-interval"]
+    },
+    "severity": "medium",
+    "description": "MCP server accesses clipboard contents or captures screenshots. This can expose sensitive data copied by the user.",
+    "remediation": "Remove the server unless clipboard/screenshot access is explicitly required. Monitor for data exfiltration.",
+    "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-016",
+    "name": "Docker Escape -- Privileged container mount",
+    "match_patterns": {
+      "args_contains": ["--privileged", "-v /var/run/docker.sock", "--pid=host"]
+    },
+    "severity": "critical",
+    "description": "MCP server arguments request privileged Docker access or host PID namespace. This enables container escape and full host compromise.",
+    "remediation": "Never run MCP servers with --privileged flag. Remove Docker socket mounts. Use rootless containers.",
+    "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-017",
+    "name": "Docker Escape -- Host filesystem mount",
+    "match_patterns": {
+      "args_contains": ["-v /:/host", "-v /etc:/", "-v /root:/", "--mount type=bind,source=/"]
+    },
+    "severity": "critical",
+    "description": "MCP server mounts the host root filesystem or sensitive host directories into a container. This allows reading and modifying host system files.",
+    "remediation": "Restrict volume mounts to specific application directories. Never mount / or /etc into containers.",
+    "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-018",
+    "name": "Docker Escape -- CAP_SYS_ADMIN capability",
+    "match_patterns": {
+      "args_contains": ["--cap-add=SYS_ADMIN", "--cap-add=ALL", "cap_sys_admin"]
+    },
+    "severity": "critical",
+    "description": "MCP server container requests SYS_ADMIN or ALL capabilities. This grants near-root privileges and enables container escape.",
+    "remediation": "Drop all capabilities and add back only what is strictly needed. Use --cap-drop=ALL --cap-add=<specific>.",
+    "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-019",
+    "name": "Docker Escape -- Host network namespace",
+    "match_patterns": {
+      "args_contains": ["--network=host", "--net=host"]
+    },
+    "severity": "high",
+    "description": "MCP server container uses host network namespace. This bypasses network isolation and exposes all host network interfaces.",
+    "remediation": "Use bridge or custom Docker networks instead of host networking. Restrict container network access.",
+    "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-020",
+    "name": "Docker Escape -- Cgroup escape via release_agent",
+    "match_patterns": {
+      "args_contains": ["release_agent", "notify_on_release", "--cgroup-parent=/"]
+    },
+    "severity": "critical",
+    "description": "MCP server arguments reference cgroup release_agent mechanism. This is a known container escape technique.",
+    "remediation": "Remove the MCP server immediately. Audit the host for signs of compromise. Use cgroup v2 with restricted permissions.",
+    "added_at": "2026-03-26"
+  }
+]

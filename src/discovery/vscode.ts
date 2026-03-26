@@ -34,6 +34,7 @@ export function discoverVSCodeServers(configPath?: string): MCPServer[] {
     return Object.entries(config.mcpServers).map(([name, def]) => ({
       name,
       ...def,
+      source_client: 'vscode' as const,
     }))
   } catch {
     return []

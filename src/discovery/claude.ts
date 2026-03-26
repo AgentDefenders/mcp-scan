@@ -32,6 +32,7 @@ export function discoverClaudeServers(configPath?: string): MCPServer[] {
     return Object.entries(config.mcpServers).map(([name, def]) => ({
       name,
       ...def,
+      source_client: 'claude' as const,
     }))
   } catch {
     return []

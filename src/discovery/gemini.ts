@@ -33,6 +33,7 @@ export function discoverGeminiServers(configPath?: string): MCPServer[] {
     return Object.entries(config.mcpServers).map(([name, def]) => ({
       name,
       ...def,
+      source_client: 'gemini' as const,
     }))
   } catch {
     return []

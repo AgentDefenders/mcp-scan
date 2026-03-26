@@ -33,6 +33,7 @@ export function discoverCursorServers(configPath?: string): MCPServer[] {
     return Object.entries(config.mcpServers).map(([name, def]) => ({
       name,
       ...def,
+      source_client: 'cursor' as const,
     }))
   } catch {
     return []

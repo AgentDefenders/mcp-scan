@@ -3,6 +3,7 @@ import { analyzeToolPoisoning } from './tool-poisoning.js'
 import { analyzePromptInjection } from './prompt-injection.js'
 import { analyzeShadowing } from './shadowing.js'
 import { analyzeSuspiciousEnv } from './suspicious-env.js'
+import { analyzeKnownThreats } from './known-threats.js'
 
 /**
  * Compute the security grade from a list of findings.
@@ -30,6 +31,7 @@ export function analyzeServer(server: MCPServer): ServerScanResult {
     ...analyzePromptInjection(server),
     ...analyzeShadowing(server),
     ...analyzeSuspiciousEnv(server),
+    ...analyzeKnownThreats(server),
   ]
   return {
     server_name: server.name,

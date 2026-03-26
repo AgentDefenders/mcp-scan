@@ -1,18 +1,44 @@
 {
   "name": "@agentdefenders/mcp-scan",
-  "version": "0.1.1-alpha",
+  "version": "0.2.0",
   "description": "MCP supply chain scanner - detect tool poisoning, prompt injection, and shadowing attacks",
+  "license": "MIT",
+  "author": "AgentDefenders <security@agentdefenders.ai> (https://agentdefenders.ai)",
+  "homepage": "https://agentdefenders.ai/mcp-scan",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AgentDefenders/mcp-scan.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AgentDefenders/mcp-scan/issues"
+  },
+  "keywords": [
+    "mcp",
+    "security",
+    "scanner",
+    "ai-agent",
+    "supply-chain",
+    "tool-poisoning",
+    "prompt-injection",
+    "llm",
+    "model-context-protocol",
+    "owasp"
+  ],
   "private": false,
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "bin": {
     "mcp-scan": "./dist/cli.js"
   },
   "files": [
     "dist/",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

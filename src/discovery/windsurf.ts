@@ -33,6 +33,7 @@ export function discoverWindsurfServers(configPath?: string): MCPServer[] {
     return Object.entries(config.mcpServers).map(([name, def]) => ({
       name,
       ...def,
+      source_client: 'windsurf' as const,
     }))
   } catch {
     return []

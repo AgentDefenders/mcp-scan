@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { analyzeToolPoisoning } from '../src/analyzers/tool-poisoning.js'
 import { analyzePromptInjection } from '../src/analyzers/prompt-injection.js'
 import { analyzeShadowing } from '../src/analyzers/shadowing.js'
-import { computeGrade } from '../src/analyzers/index.js'
+import { computeGrade, analyzeServer, analyzeAll } from '../src/analyzers/index.js'
 import type { MCPServer } from '../src/types.js'
 
 const cleanServer: MCPServer = {
@@ -127,5 +127,38 @@ describe('grade computation', () => {
 
   it('returns B for low findings only', () => {
     expect(computeGrade([{ analyzer: 'shadowing', severity: 'low', server_name: 'x', tool_name: 'y', description: 'd', field: 'name', evidence: 'e', remediation: '' }])).toBe('B')
+  })
+})
+
+describe('analyzeServer includes known-threats analyzer', () => {
+  it('produces known-threats findings for a server matching a known threat', () => {
+    const knownThreatServer: MCPServer = {
+      name: 'openclaw',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const result = analyzeServer(knownThreatServer)
+    const knownThreatFindings = result.findings.filter((f) => f.analyzer === 'known-threats')
+    expect(knownThreatFindings.length).toBeGreaterThan(0)
+    expect(knownThreatFindings[0].server_name).toBe('openclaw')
+  })
+
+  it('does not produce known-threats findings for a clean server', () => {
+    const result = analyzeServer(cleanServer)
+    const knownThreatFindings = result.findings.filter((f) => f.analyzer === 'known-threats')
+    expect(knownThreatFindings).toHaveLength(0)
+  })
+
+  it('analyzeAll aggregates known-threats findings across servers', () => {
+    const knownThreatServer: MCPServer = {
+      name: 'openclaw',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const result = analyzeAll([cleanServer, knownThreatServer])
+    const knownThreatFindings = result.findings.filter((f) => f.analyzer === 'known-threats')
+    expect(knownThreatFindings.length).toBeGreaterThan(0)
   })
 })
