@@ -1,6 +1,6 @@
 {
   "name": "@agentdefenders/mcp-scan",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "MCP supply chain scanner - detect tool poisoning, prompt injection, and shadowing attacks",
   "license": "MIT",
   "author": "AgentDefenders <security@agentdefenders.ai> (https://agentdefenders.ai)",

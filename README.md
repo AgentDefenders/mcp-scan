@@ -3,6 +3,7 @@
 Security scanner for Model Context Protocol (MCP) server configurations. Detects tool poisoning, prompt injection, shadowing attacks, and known threats.
 
 [![npm version](https://img.shields.io/npm/v/@agentdefenders/mcp-scan)](https://www.npmjs.com/package/@agentdefenders/mcp-scan)
+[![npm downloads](https://img.shields.io/npm/dw/@agentdefenders/mcp-scan)](https://www.npmjs.com/package/@agentdefenders/mcp-scan)
 [![license](https://img.shields.io/npm/l/@agentdefenders/mcp-scan)](./LICENSE)
 [![node](https://img.shields.io/node/v/@agentdefenders/mcp-scan)](https://nodejs.org)
 
@@ -16,12 +17,12 @@ All analysis runs locally on your machine. No data is transmitted to any externa
 npx @agentdefenders/mcp-scan
 ```
 
-The scanner auto-detects MCP client configurations (Claude Desktop, Cursor, VS Code, Windsurf, Gemini CLI) and analyzes all registered servers.
+The scanner auto-detects MCP client configurations across 11 supported clients and analyzes all registered servers.
 
 ## Example Output
 
 ```
-@agentdefenders/mcp-scan v0.2.0
+@agentdefenders/mcp-scan v0.3.0
 
 Scanning MCP configurations...
 Found 2 servers across 1 client configuration.
@@ -57,10 +58,16 @@ Summary
 | Client | macOS | Linux | Windows |
 |---|---|---|---|
 | Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` | `~/.config/Claude/claude_desktop_config.json` | `%APPDATA%\Claude\claude_desktop_config.json` |
-| Cursor | `~/Library/Application Support/Cursor/User/globalStorage/cursor.mcp/config.json` | `~/.config/Cursor/User/globalStorage/cursor.mcp/config.json` | `%APPDATA%\Cursor\User\globalStorage\cursor.mcp\config.json` |
-| VS Code 1.99+ | `~/Library/Application Support/Code/User/globalStorage/vscode.mcp/config.json` | `~/.config/Code/User/globalStorage/vscode.mcp/config.json` | `%APPDATA%\Code\User\globalStorage\vscode.mcp\config.json` |
+| Cursor | `~/.cursor/mcp.json` | `~/.cursor/mcp.json` | `%APPDATA%\Cursor\mcp.json` |
+| VS Code | `~/Library/Application Support/Code/User/mcp.json` | `~/.config/Code/User/mcp.json` | `%APPDATA%\Code\User\mcp.json` |
 | Windsurf | `~/Library/Application Support/Windsurf/User/globalStorage/windsurf.mcp/config.json` | `~/.config/Windsurf/User/globalStorage/windsurf.mcp/config.json` | `%APPDATA%\Windsurf\User\globalStorage\windsurf.mcp\config.json` |
-| Google Gemini CLI | `~/.gemini/settings.json` | `~/.gemini/settings.json` | `%USERPROFILE%\.gemini\settings.json` |
+| Gemini CLI | `~/.gemini/settings.json` | `~/.gemini/settings.json` | `%USERPROFILE%\.gemini\settings.json` |
+| Cline | `~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json` | `~/.config/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json` | `%APPDATA%\Code\User\globalStorage\saoudrizwan.claude-dev\settings\cline_mcp_settings.json` |
+| JetBrains / Junie | `~/.junie/mcp/mcp.json` | `~/.junie/mcp/mcp.json` | `%USERPROFILE%\.junie\mcp\mcp.json` |
+| Continue.dev | `~/.continue/config.yaml` | `~/.continue/config.yaml` | `%USERPROFILE%\.continue\config.yaml` |
+| Google Antigravity | `~/.gemini/antigravity/mcp_config.json` | `~/.gemini/antigravity/mcp_config.json` | `%USERPROFILE%\.gemini\antigravity\mcp_config.json` |
+| Zed | `~/.zed/settings.json` | `~/.config/zed/settings.json` | `%APPDATA%\Zed\settings.json` |
+| Amazon Q Developer | `~/.aws/amazonq/default.json` | `~/.aws/amazonq/default.json` | `%USERPROFILE%\.aws\amazonq\default.json` |
 
 You can also point to a specific config file with `--config <path>`.
 
@@ -88,9 +95,21 @@ npx @agentdefenders/mcp-scan --format sarif
 
 ## CI/CD Integration
 
-Add MCP configuration scanning to your CI pipeline. The `--fail-on` flag sets the exit code to 1 if any finding meets or exceeds the specified severity.
+Add MCP configuration scanning to your CI pipeline. The `--ci` flag outputs GitHub Actions annotations, writes a markdown step summary, and defaults to `--fail-on high`.
 
-### GitHub Actions
+### GitHub Actions (recommended)
+
+```yaml
+- name: Scan MCP configurations
+  run: npx @agentdefenders/mcp-scan --ci
+```
+
+This will:
+- Print findings as `::error::` / `::warning::` annotations in the Actions log
+- Write a markdown summary to the job summary tab
+- Exit with code 1 if any HIGH or CRITICAL findings are detected
+
+### GitHub Actions with SARIF upload
 
 ```yaml
 - name: Scan MCP configurations
@@ -102,13 +121,20 @@ Add MCP configuration scanning to your CI pipeline. The `--fail-on` flag sets th
     sarif_file: mcp-scan.sarif
 ```
 
+### Other CI platforms
+
+```bash
+npx @agentdefenders/mcp-scan --quiet --fail-on high
+```
+
 ## CLI Reference
 
 | Flag | Description | Default |
 |---|---|---|
 | `--config <path>` | Path to a specific MCP client configuration file. | Auto-detect |
 | `--format <type>` | Output format: `console`, `json`, `sarif`. | `console` |
-| `--fail-on <severity>` | Exit with code 1 if any finding meets or exceeds severity: `low`, `medium`, `high`, `critical`. | Disabled |
+| `--fail-on <severity>` | Exit with code 1 if any finding meets or exceeds severity: `low`, `medium`, `high`, `critical`. | Disabled (`high` in CI mode) |
+| `--ci` | CI mode: GitHub Actions annotations, step summary, no prompts. Implies `--quiet`. | Disabled |
 | `--api-key <key>` | AgentDefenders API key for dashboard sync. Enables remote result storage. | None |
 | `--watch` | Continuously monitor configuration files for changes and re-scan on modification. | Disabled |
 | `--interval <seconds>` | Polling interval in seconds when using `--watch`. | `30` |
