@@ -12,6 +12,7 @@ import { getKnownThreatCount } from './analyzers/known-threats.js'
 import { printBanner, printConsoleReport } from './reporters/console.js'
 import { formatJSON, printJSONReport } from './reporters/json.js'
 import { printSARIFReport } from './reporters/sarif.js'
+import { printGitHubAnnotations, writeStepSummary } from './reporters/github.js'
 import { runWatchMode } from './drift/index.js'
 import type { ScanResult, ScanSummary } from './types.js'
 
@@ -40,6 +41,7 @@ program
   .option('--watch', 'Run in drift detection mode (polls at --interval seconds)')
   .option('--interval <seconds>', 'Polling interval for --watch mode', '300')
   .option('--quiet', 'Suppress CTA output (for CI environments)')
+  .option('--ci', 'CI mode: GitHub Actions annotations, step summary, no interactive prompts')
   .option('--badge', 'Print a shields.io badge URL based on scan grade')
   .action(async (opts) => {
     // Drift detection mode.
@@ -53,8 +55,12 @@ program
       return
     }
 
+    // CI mode implies quiet (no interactive prompts or CTA).
+    const isCI = !!opts.ci
+    const isQuiet = !!opts.quiet || isCI
+
     // Print banner in console mode when not quiet.
-    if (opts.format !== 'json' && opts.format !== 'sarif' && !opts.quiet) {
+    if (opts.format !== 'json' && opts.format !== 'sarif' && !isQuiet) {
       printBanner(SCANNER_VERSION)
     }
 
@@ -112,6 +118,12 @@ program
       printConsoleReport(result, servers)
     }
 
+    // CI mode: emit GitHub Actions annotations and step summary.
+    if (isCI) {
+      printGitHubAnnotations(result)
+      writeStepSummary(result)
+    }
+
     // Print badge URL if --badge flag is set.
     if (opts.badge) {
       const badgeColor = BADGE_COLORS[overallGrade] || 'lightgrey'
@@ -127,7 +139,7 @@ program
     }
 
     // Print CTA only in console format and when not quiet.
-    if (opts.format !== 'json' && opts.format !== 'sarif' && !opts.quiet) {
+    if (opts.format !== 'json' && opts.format !== 'sarif' && !isQuiet) {
       if (!apiKey) {
         console.log('Track your security posture: https://app.agentdefenders.ai/scanner')
       } else if (uploadedId) {
@@ -138,9 +150,10 @@ program
       console.log('')
     }
 
-    // Exit code enforcement.
-    if (opts.failOn) {
-      const severity = opts.failOn as string
+    // Exit code enforcement. CI mode defaults to --fail-on high.
+    const failOnSeverity = opts.failOn || (isCI ? 'high' : undefined)
+    if (failOnSeverity) {
+      const severity = failOnSeverity as string
       const severityOrder = ['low', 'medium', 'high', 'critical']
       const threshold = severityOrder.indexOf(severity)
       if (threshold !== -1) {
