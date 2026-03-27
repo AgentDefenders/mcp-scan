@@ -50,7 +50,7 @@ program
         intervalSeconds: parseInt(opts.interval, 10) || 300,
         apiKey: opts.apiKey || process.env.SHIELD_API_KEY,
         apiBase: opts.apiBase,
-        baselineFile: path.join(os.homedir(), '.config', 'sysmond', 'mcp_baselines.json'),
+        baselineFile: path.join(os.homedir(), '.config', 'mcp-scan', 'baselines.json'),
       })
       return
     }

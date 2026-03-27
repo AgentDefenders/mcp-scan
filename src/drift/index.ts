@@ -192,8 +192,7 @@ function detectDrift(servers: MCPServer[], baseline: Map<string, ToolBaseline>):
 
 /**
  * Upload a batch of drift events as a single mcp_drift scan result to POST /api/v1/scans.
- * Uses Authorization: Bearer (dashboard auth group) instead of X-Shield-Internal-Secret.
- * Drift events are scan results, not canary triggers — they don't have a canary_token_id.
+ * Uses Bearer token authentication for dashboard API access.
  */
 async function postDriftScan(events: DriftEvent[], apiKey: string, apiBase: string): Promise<void> {
   if (events.length === 0) return
@@ -220,7 +219,7 @@ async function postDriftScan(events: DriftEvent[], apiKey: string, apiBase: stri
  * On first run: establishes the baseline. On subsequent runs: detects and reports changes.
  */
 export async function runWatchMode(opts: DriftOptions): Promise<void> {
-  const baselineFile = opts.baselineFile || path.join(os.homedir(), '.config', 'sysmond', 'mcp_baselines.json')
+  const baselineFile = opts.baselineFile || path.join(os.homedir(), '.config', 'mcp-scan', 'baselines.json')
   const apiBase = opts.apiBase || 'https://api.agentdefenders.ai'
 
   console.log(`drift: starting watch mode (interval: ${opts.intervalSeconds}s)`)
