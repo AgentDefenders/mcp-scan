@@ -22,7 +22,7 @@ The scanner auto-detects MCP client configurations across 11 supported clients a
 ## Example Output
 
 ```
-@agentdefenders/mcp-scan v0.3.0
+@agentdefenders/mcp-scan v0.2.2-alpha
 
 Scanning MCP configurations...
 Found 2 servers across 1 client configuration.
