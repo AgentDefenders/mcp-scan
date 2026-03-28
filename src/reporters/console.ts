@@ -166,13 +166,30 @@ function colorize(text: string, color: string): string {
 
 /**
  * Print the AgentDefenders banner.
- * Claude Code inspired: clean sentinel diamond + bold product name.
+ *
+ * Design: pixel-art sentinel shield (5 lines) with product info aligned
+ * beside it. Inspired by Claude Code's pixel art mascot approach.
+ * Uses Unicode block characters to create a shield silhouette with a
+ * cyan sentinel diamond eye and red alert indicators.
+ *
+ *      ▄▄▄▄▄      AgentDefenders mcp-scan v0.x.x
+ *     █ ◆ █      MCP supply chain security scanner
+ *     █ ▪ █      Detects poisoning, injection, shadowing, known threats
+ *      █▪█       All analysis runs locally. No data leaves your machine.
+ *       ▀
  */
 export function printBanner(version: string): void {
+  const g = BRIGHT_GREEN
+  const c = BRIGHT_CYAN
+  const d = GRAY
+  const r = RESET
+
   console.log('')
-  console.log(`  ${BRIGHT_GREEN}${BOLD}◇${RESET} ${WHITE}${BOLD}AgentDefenders${RESET} ${BRIGHT_CYAN}mcp-scan${RESET} ${GRAY}v${version}${RESET}`)
-  console.log(`  ${GRAY}MCP supply chain security scanner${RESET}`)
-  console.log(`  ${GRAY}All analysis runs locally. No data leaves your machine.${RESET}`)
+  console.log(`     ${g}▄▄▄▄▄${r}     ${WHITE}${BOLD}AgentDefenders${r} ${c}mcp-scan${r} ${d}v${version}${r}`)
+  console.log(`    ${g}█${d}▒${c}${BOLD}◆${r}${d}▒${g}█${r}    ${d}MCP supply chain security scanner${r}`)
+  console.log(`    ${g}█${RED}${BOLD} ▪ ${r}${g}█${r}    ${d}Detects poisoning, injection, shadowing, known threats${r}`)
+  console.log(`     ${g}█${RED}▪${g}█${r}     ${d}All analysis runs locally. No data leaves your machine.${r}`)
+  console.log(`      ${g}▀${r}`)
   console.log('')
 }
 
