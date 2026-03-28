@@ -341,11 +341,5 @@ export function printConsoleReport(result: ScanResult, servers?: MCPServer[]): v
   console.log(`  ${gradeColor}${BOLD}Grade ${result.overall_grade}${RESET} ${GRAY}-- ${explanation}${RESET}`)
   console.log('')
 
-  // ── 7. CTA ──────────────────────────────────────────────────────────
-  console.log(`  ${GRAY}${horizontalLine(60)}${RESET}`)
-  console.log(`  ${BRIGHT_GREEN}${BOLD}Track your results on the Shield dashboard:${RESET}`)
-  console.log(`  ${GRAY}1.${RESET} Sign up:       ${BRIGHT_CYAN}${UNDERLINE}https://app.agentdefenders.ai${RESET}`)
-  console.log(`  ${GRAY}2.${RESET} Get API key:   ${GRAY}Settings > API Keys${RESET}`)
-  console.log(`  ${GRAY}3.${RESET} Re-run:        ${WHITE}npx @agentdefenders/mcp-scan --api-key shld_xxx${RESET}`)
-  console.log('')
+  // CTA is printed by cli.ts (has conditional logic for api-key vs uploaded vs failed)
 }
