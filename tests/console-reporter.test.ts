@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { printConsoleReport } from '../src/reporters/console.js'
+import { printConsoleReport, printBanner } from '../src/reporters/console.js'
 import type { ScanResult } from '../src/types.js'
 
 /** Strip ANSI escape codes from a string. */
@@ -165,17 +165,18 @@ describe('printConsoleReport', () => {
   it('shows remediation when present', () => {
     const lines = captureOutput(scanWithFindings)
     const output = lines.join('\n')
-    expect(output).toContain('Remediation:')
+    expect(output).toContain('fix:')
     expect(output).toContain('Review the tool description')
   })
 
-  it('shows [PASS] checklist for clean servers', () => {
+  it('shows pass checklist for clean servers', () => {
     const output = captureCleanOutput(cleanScan)
-    expect(output).toContain('[PASS] tool-poisoning')
-    expect(output).toContain('[PASS] prompt-injection')
-    expect(output).toContain('[PASS] shadowing')
-    expect(output).toContain('[PASS] suspicious-env')
-    expect(output).toContain('[PASS] known-threats')
+    // Compact format uses checkmarks with short analyzer names
+    expect(output).toContain('poisoning')
+    expect(output).toContain('injection')
+    expect(output).toContain('shadowing')
+    expect(output).toContain('env')
+    expect(output).toContain('threats')
   })
 
   it('shows grade explanation for clean scan', () => {
@@ -190,8 +191,6 @@ describe('printConsoleReport', () => {
     const spy = vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
       lines.push(args.map(String).join(' '))
     })
-    // Import and call printBanner directly to test version display.
-    const { printBanner } = require('../src/reporters/console.js')
     printBanner('0.2.2-alpha')
     spy.mockRestore()
     const output = lines.join('\n')
