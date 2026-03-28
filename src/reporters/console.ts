@@ -197,11 +197,18 @@ export function printBanner(version: string): void {
 
 /**
  * Print a human-readable scan report to stdout.
- * Uses box-drawing characters and ANSI colors for a professional terminal UI.
+ *
+ * Layout:
+ *   1. Scan header (date, scope)
+ *   2. Overall grade badge
+ *   3. Per-server results (grade + analyzer checklist)
+ *   4. Summary stats
+ *   5. Recommendations
+ *   6. Grade verdict
+ *   7. CTA (shield dashboard)
  */
 export function printConsoleReport(result: ScanResult, servers?: MCPServer[]): void {
   const knownThreatCount = getKnownThreatCount()
-  const W = 72 // box width (inner)
 
   // Build a lookup from server name to MCPServer for extra metadata.
   const serverMap = new Map<string, MCPServer>()
@@ -217,21 +224,20 @@ export function printConsoleReport(result: ScanResult, servers?: MCPServer[]): v
     .map((c) => CLIENT_DISPLAY_NAMES[c] || c)
     .join(', ')
 
-  // --- Header box ---
-  console.log(boxTop(W))
-  console.log(boxLine(`${WHITE}${BOLD}MCP Security Scan${RESET}  ${GRAY}${new Date(result.scanned_at).toLocaleString()}${RESET}`, W))
-  const clientSuffix = clientDisplay ? ` ${GRAY}(${clientDisplay})${RESET}` : ''
-  console.log(boxLine(`${DIM}Scanned ${result.servers.length} server${result.servers.length !== 1 ? 's' : ''} across ${clientNames.length} client${clientNames.length !== 1 ? 's' : ''}${clientSuffix}${RESET}`, W))
-  console.log(boxBottom(W))
+  const gradeColor = GRADE_COLORS[result.overall_grade] || RESET
+
+  // ── 1. Scan header ──────────────────────────────────────────────────
+  const clientSuffix = clientDisplay ? ` (${clientDisplay})` : ''
+  console.log(`  ${GRAY}${BOLD}MCP Security Scan${RESET}  ${GRAY}${new Date(result.scanned_at).toLocaleString()}${RESET}`)
+  console.log(`  ${GRAY}Scanned ${WHITE}${result.servers.length}${GRAY} server${result.servers.length !== 1 ? 's' : ''} across ${WHITE}${clientNames.length}${GRAY} client${clientNames.length !== 1 ? 's' : ''}${clientSuffix}${RESET}`)
   console.log('')
 
-  // --- Overall grade ---
-  const gradeColor = GRADE_COLORS[result.overall_grade] || RESET
-  const gradeBg = GRADE_BG[result.overall_grade] || ''
+  // ── 2. Overall grade ────────────────────────────────────────────────
   const findingText = result.finding_count === 0
-    ? `${GREEN}0 findings${RESET}`
-    : `${RED}${result.finding_count} finding${result.finding_count !== 1 ? 's' : ''}${RESET}`
-  console.log(`  ${BOLD}Overall Grade:${RESET} ${gradeBg}${WHITE}${BOLD} ${result.overall_grade} ${RESET}  ${findingText}`)
+    ? `${GREEN}${BOLD}0 findings${RESET}`
+    : `${RED}${BOLD}${result.finding_count} finding${result.finding_count !== 1 ? 's' : ''}${RESET}`
+  console.log(`  ${GRAY}Overall grade:${RESET} ${gradeColor}${BOLD}${result.overall_grade}${RESET}  ${findingText}`)
+  console.log(`  ${GRAY}${horizontalLine(60)}${RESET}`)
   console.log('')
 
   if (result.servers.length === 0) {
@@ -240,13 +246,13 @@ export function printConsoleReport(result: ScanResult, servers?: MCPServer[]): v
     return
   }
 
-  // --- Per-server results ---
+  // ── 3. Per-server results ───────────────────────────────────────────
   for (const server of result.servers) {
     const sg = GRADE_COLORS[server.grade] || RESET
     const originalServer = serverMap.get(server.server_name)
 
     const toolLabel = server.tool_count === 0
-      ? `${GRAY}config-only${RESET}`
+      ? 'config-only'
       : `${server.tool_count} tool${server.tool_count !== 1 ? 's' : ''}`
 
     const serverWithMeta = {
@@ -255,79 +261,91 @@ export function printConsoleReport(result: ScanResult, servers?: MCPServer[]): v
       args: originalServer?.args,
       transport: originalServer?.transport,
     }
-    const cmdPath = formatCommandPath(serverWithMeta, 45)
+    const cmdPath = formatCommandPath(serverWithMeta, 40)
     const transport = inferTransport(serverWithMeta)
-    const cmdDisplay = cmdPath ? `  ${GRAY}${cmdPath}${RESET}` : ''
 
-    // Server header line: grade badge + name + metadata
-    console.log(`  ${sg}${BOLD}${server.grade}${RESET}  ${WHITE}${BOLD}${server.server_name}${RESET}  ${GRAY}(${toolLabel})${cmdDisplay}  [${transport}]${RESET}`)
+    // Server header: grade + name on first line, command on second
+    console.log(`  ${sg}${BOLD}${server.grade}${RESET}  ${WHITE}${BOLD}${server.server_name}${RESET}  ${GRAY}(${toolLabel})${RESET}  ${GRAY}[${transport}]${RESET}`)
+    if (cmdPath) {
+      console.log(`     ${GRAY}${cmdPath}${RESET}`)
+    }
 
     if (server.findings.length === 0) {
-      // Show pass checklist with checkmarks
-      for (const analyzer of ALL_ANALYZERS) {
-        const suffix = analyzer === 'known-threats'
-          ? ` ${GRAY}(${knownThreatCount} threats checked)${RESET}`
-          : ''
-        console.log(`     ${GREEN}${BOLD}✓${RESET} ${DIM}${analyzer}${RESET}${suffix}`)
-      }
+      // Clean server: compact single-line pass indicators
+      const passLine = ALL_ANALYZERS.map((a) => {
+        if (a === 'known-threats') return `${GREEN}✓${RESET}${GRAY}threats${RESET}`
+        const short = a.replace('tool-', '').replace('prompt-', '').replace('suspicious-', '')
+        return `${GREEN}✓${RESET}${GRAY}${short}${RESET}`
+      }).join('  ')
+      console.log(`     ${passLine}`)
     } else {
-      // Show passing analyzers first
+      // Server with findings: show all analyzers
       const findingAnalyzers = new Set(server.findings.map((f) => f.analyzer))
-      for (const analyzer of ALL_ANALYZERS) {
-        if (!findingAnalyzers.has(analyzer)) {
-          const suffix = analyzer === 'known-threats'
-            ? ` ${GRAY}(${knownThreatCount} threats checked)${RESET}`
-            : ''
-          console.log(`     ${GREEN}${BOLD}✓${RESET} ${DIM}${analyzer}${RESET}${suffix}`)
-        }
-      }
 
-      // Show findings with severity badges
+      // Pass/fail for each analyzer on one line
+      const statusLine = ALL_ANALYZERS.map((a) => {
+        const hasFinding = findingAnalyzers.has(a)
+        const short = a === 'known-threats' ? 'threats'
+          : a.replace('tool-', '').replace('prompt-', '').replace('suspicious-', '')
+        if (hasFinding) {
+          return `${RED}✗${RESET}${GRAY}${short}${RESET}`
+        }
+        return `${GREEN}✓${RESET}${GRAY}${short}${RESET}`
+      }).join('  ')
+      console.log(`     ${statusLine}`)
+
+      // Detail each finding
       for (const finding of server.findings) {
         const sc = SEVERITY_COLORS[finding.severity] || RESET
-        const toolSuffix = finding.tool_name && finding.tool_name !== '*' ? `  ${WHITE}${finding.tool_name}${RESET}` : ''
-        const sevLabel = finding.severity.toUpperCase().padEnd(8)
-        console.log(`     ${sc}${BOLD}✗${RESET} ${sc}${sevLabel}${RESET} ${finding.analyzer}${toolSuffix}`)
-        console.log(`       ${GRAY}${finding.description}${RESET}`)
+        const toolSuffix = finding.tool_name && finding.tool_name !== '*'
+          ? `${WHITE} ${finding.tool_name}${RESET}` : ''
+        console.log('')
+        console.log(`     ${sc}${BOLD}${finding.severity.toUpperCase()}${RESET}  ${WHITE}${finding.analyzer}${RESET}${toolSuffix}`)
+        console.log(`     ${GRAY}${finding.description}${RESET}`)
         if (finding.evidence && finding.evidence.length > 0) {
-          const evidenceSnippet = finding.evidence.slice(0, 100)
-          console.log(`       ${GRAY}${ITALIC}evidence: ${evidenceSnippet}${finding.evidence.length > 100 ? '...' : ''}${RESET}`)
+          const snippet = finding.evidence.slice(0, 100)
+          console.log(`     ${GRAY}${ITALIC}${snippet}${finding.evidence.length > 100 ? '...' : ''}${RESET}`)
         }
         if (finding.remediation) {
-          console.log(`       ${CYAN}fix: ${finding.remediation}${RESET}`)
+          console.log(`     ${BRIGHT_CYAN}fix:${RESET} ${CYAN}${finding.remediation}${RESET}`)
         }
       }
     }
     console.log('')
   }
 
-  // --- Summary box ---
+  // ── 4. Summary ──────────────────────────────────────────────────────
   const summary = result.summary
+  const serverCount = summary?.total_servers ?? result.servers.length
   const toolsAnalyzed = summary?.total_tools_analyzed ?? result.servers.reduce((sum, s) => sum + s.tool_count, 0)
-  const duration = summary?.scan_duration_ms !== undefined ? `${(summary.scan_duration_ms / 1000).toFixed(2)}s` : '—'
+  const threatsChecked = summary?.known_threats_checked ?? knownThreatCount
+  const duration = summary?.scan_duration_ms !== undefined ? `${(summary.scan_duration_ms / 1000).toFixed(2)}s` : null
 
-  console.log(boxTop(W))
-  console.log(boxLine(`${WHITE}${BOLD}Summary${RESET}`, W))
-  console.log(boxMid(W))
-  console.log(boxLine(`  Servers scanned       ${WHITE}${summary?.total_servers ?? result.servers.length}${RESET}`, W))
-  console.log(boxLine(`  Tools analyzed        ${WHITE}${toolsAnalyzed}${RESET}`, W))
-  console.log(boxLine(`  Known threats checked ${WHITE}${summary?.known_threats_checked ?? knownThreatCount}${RESET}`, W))
+  console.log(`  ${GRAY}${horizontalLine(60)}${RESET}`)
+  const durationStr = duration ? `  ${GRAY}in ${WHITE}${duration}${GRAY}${RESET}` : ''
+  console.log(`  ${WHITE}${BOLD}${serverCount}${RESET}${GRAY} servers  ${WHITE}${BOLD}${toolsAnalyzed}${RESET}${GRAY} tools  ${WHITE}${BOLD}${threatsChecked}${RESET}${GRAY} threats checked${durationStr}${RESET}`)
   if (clientDisplay) {
-    console.log(boxLine(`  Clients discovered    ${WHITE}${clientDisplay}${RESET}`, W))
+    console.log(`  ${GRAY}Clients: ${WHITE}${clientDisplay}${RESET}`)
   }
-  console.log(boxLine(`  Scan duration         ${WHITE}${duration}${RESET}`, W))
-  console.log(boxBottom(W))
   console.log('')
 
-  // --- Recommendations ---
+  // ── 5. Recommendations ──────────────────────────────────────────────
   console.log(`  ${GRAY}${BOLD}Recommendations${RESET}`)
-  for (let i = 0; i < RECOMMENDATIONS.length; i++) {
-    console.log(`  ${GRAY}${i + 1}. ${RECOMMENDATIONS[i]}${RESET}`)
+  for (const rec of RECOMMENDATIONS) {
+    console.log(`  ${GRAY}  ${BRIGHT_GREEN}◆${RESET} ${GRAY}${rec}${RESET}`)
   }
   console.log('')
 
-  // --- Grade explanation ---
+  // ── 6. Grade verdict ────────────────────────────────────────────────
   const explanation = GRADE_EXPLANATIONS[result.overall_grade] || ''
-  console.log(`  ${gradeColor}${BOLD}Grade ${result.overall_grade}${RESET} ${GRAY}${explanation}${RESET}`)
+  console.log(`  ${gradeColor}${BOLD}Grade ${result.overall_grade}${RESET} ${GRAY}-- ${explanation}${RESET}`)
+  console.log('')
+
+  // ── 7. CTA ──────────────────────────────────────────────────────────
+  console.log(`  ${GRAY}${horizontalLine(60)}${RESET}`)
+  console.log(`  ${BRIGHT_GREEN}${BOLD}Track your results on the Shield dashboard:${RESET}`)
+  console.log(`  ${GRAY}1.${RESET} Sign up:       ${BRIGHT_CYAN}${UNDERLINE}https://app.agentdefenders.ai${RESET}`)
+  console.log(`  ${GRAY}2.${RESET} Get API key:   ${GRAY}Settings > API Keys${RESET}`)
+  console.log(`  ${GRAY}3.${RESET} Re-run:        ${WHITE}npx @agentdefenders/mcp-scan --api-key shld_xxx${RESET}`)
   console.log('')
 }
