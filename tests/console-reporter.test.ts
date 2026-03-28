@@ -185,10 +185,17 @@ describe('printConsoleReport', () => {
     expect(output).toContain('No security issues detected')
   })
 
-  it('shows scanner version in header', () => {
-    const lines = captureOutput(cleanScan)
+  it('shows scanner version in banner', () => {
+    const lines: string[] = []
+    const spy = vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
+      lines.push(args.map(String).join(' '))
+    })
+    // Import and call printBanner directly to test version display.
+    const { printBanner } = require('../src/reporters/console.js')
+    printBanner('0.2.2-alpha')
+    spy.mockRestore()
     const output = lines.join('\n')
-    expect(output).toContain('v0.2.0')
+    expect(output).toContain('v0.2.2-alpha')
   })
 
   it('shows MCP Security Scan header', () => {
