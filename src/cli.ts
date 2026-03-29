@@ -43,6 +43,9 @@ program
   .option('--quiet', 'Suppress CTA output (for CI environments)')
   .option('--ci', 'CI mode: GitHub Actions annotations, step summary, no interactive prompts')
   .option('--badge', 'Print a shields.io badge URL based on scan grade')
+  .option('--protect', 'After scanning, deploy Supply Shield canary tokens to protect your CI pipeline')
+  .option('--protect-package <package>', 'Supply Shield alarm package (generic, oss-python, ai-ml-pipeline, node-backend)', 'generic')
+  .option('--protect-email <email>', 'Email for Supply Shield trip alerts (free tier, no signup)')
   .action(async (opts) => {
     // Drift detection mode.
     if (opts.watch) {
@@ -169,6 +172,47 @@ program
       }
     }
 
+    // Supply Shield: deploy canary tokens after scan if --protect is set.
+    if (opts.protect) {
+      const protectEmail = opts.protectEmail || process.env.SUPPLY_SHIELD_EMAIL
+      const protectKey = apiKey // reuse the same API key for Supply Shield
+      const protectPackage = opts.protectPackage || 'generic'
+      const protectApiBase = opts.apiBase || 'https://api.agentdefenders.ai'
+
+      if (!protectEmail && !protectKey) {
+        const YELLOW = '\x1b[33m'
+        const RST = '\x1b[0m'
+        console.log(`\n  ${YELLOW}--protect requires --protect-email <email> or --api-key <key>${RST}`)
+        console.log(`  ${YELLOW}Example: npx @agentdefenders/mcp-scan --protect --protect-email you@example.com${RST}\n`)
+      } else {
+        const protectResult = await deploySupplyShield({
+          email: protectEmail,
+          apiKey: protectKey,
+          package: protectPackage,
+          apiBase: protectApiBase,
+        })
+        if (protectResult) {
+          const GREEN = '\x1b[92m'
+          const BOLD = '\x1b[1m'
+          const RST = '\x1b[0m'
+          const GRAY = '\x1b[90m'
+          console.log(`\n  ${GREEN}${BOLD}Supply Shield activated.${RST}`)
+          console.log(`  ${GRAY}${protectResult.tokens.length} canary tokens deployed (${protectPackage} package).${RST}`)
+          console.log(`  ${GRAY}Expires: ${protectResult.expires_at || 'never (paid tier)'}${RST}`)
+          console.log(`  ${GRAY}Add this to your CI workflow for continuous protection:${RST}`)
+          console.log(`\n  ${BOLD}  - uses: AgentDefenders/supply-shield@v1${RST}`)
+          console.log(`  ${BOLD}    with:${RST}`)
+          if (protectEmail) {
+            console.log(`  ${BOLD}      email: ${protectEmail}${RST}`)
+          } else {
+            console.log(`  ${BOLD}      api-key: \${{ secrets.SHIELD_KEY }}${RST}`)
+            console.log(`  ${BOLD}      package: ${protectPackage}${RST}`)
+          }
+          console.log('')
+        }
+      }
+    }
+
     // Exit code enforcement. CI mode defaults to --fail-on high.
     const failOnSeverity = opts.failOn || (isCI ? 'high' : undefined)
     if (failOnSeverity) {
@@ -219,6 +263,78 @@ async function uploadScanResult(result: ScanResult, apiKey: string, apiBase: str
     }
   } catch (err) {
     console.error(`Failed to upload scan result: ${err instanceof Error ? err.message : String(err)}`)
+    return null
+  }
+}
+
+/**
+ * Deploy Supply Shield canary tokens via the provision endpoint.
+ * Returns the provision response on success, or null on failure.
+ */
+interface SupplyShieldToken {
+  type: string
+  key: string
+  value: string
+  canary_id: string
+}
+
+interface SupplyShieldResult {
+  tokens: SupplyShieldToken[]
+  expires_at: string | null
+}
+
+async function deploySupplyShield(opts: {
+  email?: string
+  apiKey?: string
+  package: string
+  apiBase: string
+}): Promise<SupplyShieldResult | null> {
+  try {
+    // Determine repo from git if available (no shell, safe from injection).
+    let repo = 'unknown/local'
+    try {
+      const { execFileSync } = await import('child_process')
+      const remoteUrl = execFileSync('git', ['remote', 'get-url', 'origin'], {
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      }).trim()
+      const match = remoteUrl.match(/[:/]([^/]+\/[^/.]+?)(?:\.git)?$/)
+      if (match) repo = match[1]
+    } catch {
+      // Not in a git repo or no remote. Use hostname as identifier.
+      repo = `local/${os.hostname()}`
+    }
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'User-Agent': `mcp-scan/${SCANNER_VERSION}`,
+    }
+    if (opts.apiKey) {
+      headers['Authorization'] = `Bearer ${opts.apiKey}`
+    }
+
+    const body = {
+      email: opts.email,
+      package: opts.package,
+      repo,
+    }
+
+    const res = await fetch(`${opts.apiBase}/v1/supply-shield/provision`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30_000),
+    })
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '')
+      console.error(`Supply Shield provision failed: HTTP ${res.status} ${text}`)
+      return null
+    }
+
+    return await res.json() as SupplyShieldResult
+  } catch (err) {
+    console.error(`Supply Shield provision failed: ${err instanceof Error ? err.message : String(err)}`)
     return null
   }
 }
