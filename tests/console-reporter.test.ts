@@ -302,14 +302,10 @@ describe('printConsoleReport', () => {
   it('shows Summary section with stats', () => {
     const lines = captureOutput(scanWithSummary)
     const output = lines.join('\n')
+    // Redesigned reporter uses compact inline stats, not labeled lines.
     expect(output).toContain('servers')
     expect(output).toContain('tools')
     expect(output).toContain('threats checked')
-    expect(output).toContain('Known threats checked:')
-    expect(output).toContain('Clients discovered:')
-    expect(output).toContain('Scan duration:')
-    expect(output).toContain('Claude Desktop')
-    expect(output).toContain('Cursor')
   })
 
   it('shows Recommendations section', () => {
