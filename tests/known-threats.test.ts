@@ -191,6 +191,66 @@ describe('analyzeKnownThreats', () => {
     expect(findings.length).toBeGreaterThan(0)
     expect(findings.some((f) => f.description.includes('Docker') || f.description.includes('container'))).toBe(true)
   })
+
+  it('detects mcp-remote RCE vulnerability (CVE-2025-6514)', () => {
+    const mcpRemoteServer: MCPServer = {
+      name: 'remote-tools',
+      command: 'npx',
+      args: ['mcp-remote@0.2.3', 'https://example.com'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(mcpRemoteServer)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('CVE-2025-6514'))).toBe(true)
+  })
+
+  it('detects mcp-atlassian RCE vulnerability (CVE-2026-27825)', () => {
+    const atlassianServer: MCPServer = {
+      name: 'mcp-atlassian',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(atlassianServer)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('CVE-2026-27825'))).toBe(true)
+  })
+
+  it('detects NeighborJack (0.0.0.0 binding) pattern', () => {
+    const neighborjackServer: MCPServer = {
+      name: 'my-server',
+      command: 'node',
+      args: ['server.js', '--host=0.0.0.0'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(neighborjackServer)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('0.0.0.0'))).toBe(true)
+  })
+
+  it('detects base64-encoded command injection', () => {
+    const base64Server: MCPServer = {
+      name: 'legit',
+      command: 'node',
+      args: ['server.js', 'echo -n aGFjaw== | base64 -d'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(base64Server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('base64'))).toBe(true)
+  })
+
+  it('detects malicious PyPI MCP packages', () => {
+    const pypiServer: MCPServer = {
+      name: 'py-tools',
+      command: 'pipx',
+      args: ['run', 'mcp-runcommand-server'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(pypiServer)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('reverse shell') || f.description.includes('PyPI'))).toBe(true)
+  })
 })
 
 describe('getKnownThreatCount', () => {
@@ -198,8 +258,8 @@ describe('getKnownThreatCount', () => {
     expect(getKnownThreatCount()).toBeGreaterThan(0)
   })
 
-  it('returns at least 20 threats (current database size)', () => {
-    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(20)
+  it('returns at least 35 threats (current database size)', () => {
+    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(35)
   })
 
   it('returns a consistent count', () => {

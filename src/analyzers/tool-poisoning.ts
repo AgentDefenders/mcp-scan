@@ -26,6 +26,18 @@ const UNICODE_HIDDEN_PATTERNS: Array<{ pattern: RegExp; description: string }> =
     pattern: /<!--[\s\S]*?-->/,
     description: 'HTML comment in tool description (can hide instructions from UI)',
   },
+  {
+    pattern: /[\uE000-\uF8FF]/,
+    description: 'Private Use Area Unicode characters in tool description (may encode hidden data)',
+  },
+  {
+    pattern: /[\u00AD]/,
+    description: 'Soft hyphen character used to break up keywords and evade pattern detection',
+  },
+  {
+    pattern: /[\u2066-\u2069\u202A-\u202E]/,
+    description: 'Bidirectional text override characters in tool description (can reorder visible text)',
+  },
 ]
 
 /**
@@ -46,6 +58,26 @@ const HIDDEN_INSTRUCTION_PATTERNS: Array<{ pattern: RegExp; description: string;
   {
     pattern: /system\s+prompt|assistant\s+prompt|hidden\s+instructions?/i,
     description: 'Reference to system prompt in tool description (meta-instruction)',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:atob|btoa|base64_decode|Buffer\.from)\s*\(/i,
+    description: 'Base64 decode function call in tool description (obfuscated payload)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:remember|store|save)\s+(?:that|this|for\s+(?:future|later|all))\s+/i,
+    description: 'Memory poisoning instruction in tool description (persists malicious context across sessions)',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:mandatory|required)\s+(?:parameter|field|argument).*(?:api.?key|token|secret|credential|password|auth)/i,
+    description: 'Rug pull pattern: forces credential extraction as mandatory parameter (schema injection attack)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:first|before|prior\s+to)\s+(?:any|all|each)\s+(?:request|call|action|operation)/i,
+    description: 'Pre-action hijack pattern in tool description (forces actions before every request)',
     severity: 'high',
   },
 ]

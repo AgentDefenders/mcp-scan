@@ -236,5 +236,196 @@
     "description": "MCP server arguments reference cgroup release_agent mechanism. This is a known container escape technique.",
     "remediation": "Remove the MCP server immediately. Audit the host for signs of compromise. Use cgroup v2 with restricted permissions.",
     "added_at": "2026-03-26"
+  },
+  {
+    "id": "THREAT-021",
+    "name": "mcp-remote RCE via OAuth URL injection",
+    "match_patterns": {
+      "commands": ["npx"],
+      "args_contains": ["mcp-remote@0.0.", "mcp-remote@0.1.", "mcp-remote@0.2.", "mcp-remote@0.3."]
+    },
+    "severity": "critical",
+    "description": "mcp-remote versions before 0.4.0 pass malicious OAuth endpoint URLs directly to the shell, enabling arbitrary OS command execution when connecting to untrusted servers. Affected 437,000+ downloads.",
+    "cve": "CVE-2025-6514",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2025-6514",
+    "remediation": "Update mcp-remote to version 0.4.0 or later. Never connect to untrusted MCP servers with vulnerable versions.",
+    "added_at": "2026-03-29"
+  },
+  {
+    "id": "THREAT-022",
+    "name": "Figma MCP Server command injection",
+    "match_patterns": {
+      "server_names": ["figma-mcp", "figma-mcp-server"],
+      "args_contains": ["figma-mcp-server", "@anthropic/figma-mcp"]
+    },
+    "severity": "critical",
+    "description": "Critical command injection vulnerability in the Figma MCP server affecting 600,000+ downloads. Attacker-controlled input is passed unsanitized to shell execution.",
+    "cve": "CVE-2025-53967",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2025-53967",
+    "remediation": "Update to the latest patched version of the Figma MCP server. Validate all input parameters before shell execution.",
+    "added_at": "2026-03-29"
+  },
+  {
+    "id": "THREAT-023",
+    "name": "mcp-atlassian unauthenticated RCE and SSRF",
+    "match_patterns": {
+      "server_names": ["mcp-atlassian", "atlassian-mcp"],
+      "args_contains": ["mcp-atlassian"]
+    },
+    "severity": "critical",
+    "description": "Critical unauthenticated RCE and SSRF via path traversal in Confluence attachment downloads. Allows arbitrary file write and internal network access.",
+    "cve": "CVE-2026-27825",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2026-27825",
+    "remediation": "Update mcp-atlassian to the latest patched version. Restrict network access and validate all file paths.",
+    "added_at": "2026-03-29"
+  },
+  {
+    "id": "THREAT-024",
+    "name": "Anthropic filesystem server path validation bypass",
+    "match_patterns": {
+      "args_contains": ["@anthropic/server-filesystem", "@modelcontextprotocol/server-filesystem"]
+    },
+    "severity": "high",
+    "description": "Path validation bypass in official Anthropic filesystem MCP server. When chained with git server vulnerabilities (CVE-2025-68143, CVE-2025-68144), enables full RCE via malicious .git/config files.",
+    "cve": "CVE-2025-68145",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2025-68145",
+    "remediation": "Update to the latest version of the filesystem server. Restrict allowed directories to the minimum needed.",
+    "added_at": "2026-03-29"
+  },
+  {
+    "id": "THREAT-025",
+    "name": "Anthropic git server argument injection via git_diff",
+    "match_patterns": {
+      "args_contains": ["@anthropic/server-git", "@modelcontextprotocol/server-git"]
+    },
+    "severity": "high",
+    "description": "Argument injection in git_diff tool and unrestricted git_init in official Anthropic git MCP server. Combined with filesystem server, enables RCE through crafted .git/config.",
+    "cve": "CVE-2025-68144",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2025-68144",
+    "remediation": "Update to the latest version of the git server. Sanitize all arguments passed to git commands.",
+    "added_at": "2026-03-29"
+  },
+  {
+    "id": "THREAT-026",
+    "name": "Azure MCP Server SSRF via OAuth proxy",
+    "match_patterns": {
+      "server_names": ["azure-mcp", "azure-mcp-server"],
+      "args_contains": ["azure-mcp-server"]
+    },
+    "severity": "high",
+    "description": "SSRF vulnerability in Azure MCP Server. Trusts X-Atlassian headers and OAuth proxy requests without authorization boundary validation, enabling unauthorized access to internal services.",
+    "cve": "CVE-2026-26118",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2026-26118",
+    "remediation": "Update Azure MCP Server to the latest version. Implement strict authorization boundaries for OAuth proxy requests.",
+    "added_at": "2026-03-29"
+  },
+  {
+    "id": "THREAT-027",
+    "name": "NeighborJack -- MCP server bound to 0.0.0.0",
+    "match_patterns": {
+      "args_contains": ["--host=0.0.0.0", "--bind=0.0.0.0", "--listen=0.0.0.0", "0.0.0.0:"]
+    },
+    "severity": "high",
+    "description": "MCP server explicitly bound to all network interfaces (0.0.0.0). Any device on the same local network can access the server without authentication, enabling unauthorized tool execution.",
+    "remediation": "Bind MCP servers to 127.0.0.1 (localhost) only. Use firewall rules to restrict access. Add authentication to all exposed endpoints.",
+    "added_at": "2026-03-29"
+  },
+  {
+    "id": "THREAT-028",
+    "name": "Supply Chain -- Malicious PyPI MCP package (reverse shell)",
+    "match_patterns": {
+      "commands": ["pip", "pip3", "pipx", "uvx", "uv"],
+      "args_contains": ["mcp-runcommand-server", "larpexodus", "mcp-reverse-shell", "mcp-shell-exec"]
+    },
+    "severity": "critical",
+    "description": "Malicious MCP server package from PyPI containing reverse shell functionality. Establishes outbound connection to attacker-controlled infrastructure upon installation.",
+    "remediation": "Remove the package immediately. Check for active reverse shell connections. Audit system for persistence mechanisms and compromised credentials.",
+    "added_at": "2026-03-29"
+  },
+  {
+    "id": "THREAT-029",
+    "name": "Supply Chain -- Suspicious pip MCP package (exfil/hack/backdoor)",
+    "match_patterns": {
+      "commands": ["pip", "pip3", "pipx", "uvx", "uv"],
+      "args_contains": ["hack-mcp", "mcp-hack", "exfil-mcp", "mcp-exfil", "backdoor-mcp", "mcp-backdoor", "mcp-pwn"]
+    },
+    "severity": "critical",
+    "description": "MCP server installed via pip/pipx with suspicious package name indicating malicious intent. Python MCP packages on PyPI have been used to deploy reverse shells and data exfiltration tools.",
+    "remediation": "Remove the package immediately. Verify package source and author on PyPI. Scan system for signs of compromise.",
+    "added_at": "2026-03-29"
+  },
+  {
+    "id": "THREAT-030",
+    "name": "Postmark MCP Server impersonation (email exfiltration)",
+    "match_patterns": {
+      "server_names": ["postmark-mcp", "postmark-mcp-server", "postmark-mail-mcp"],
+      "args_contains": ["postmark-mcp-server"]
+    },
+    "severity": "critical",
+    "description": "Impersonation of legitimate Postmark email service MCP server. Injects BCC copies of all sent emails to attacker-controlled addresses, exfiltrating confidential documents, memos, and invoices.",
+    "remediation": "Remove the server immediately. Verify the package source against the official Postmark documentation. Audit sent emails for unauthorized BCC recipients.",
+    "added_at": "2026-03-29"
+  },
+  {
+    "id": "THREAT-031",
+    "name": "SSRF via MarkItDown MCP Server (cloud metadata theft)",
+    "match_patterns": {
+      "server_names": ["markitdown-mcp", "markitdown"],
+      "args_contains": ["markitdown-mcp"]
+    },
+    "severity": "high",
+    "description": "SSRF vulnerability in MarkItDown MCP server affecting 36.7% of analyzed cloud deployments. Enables exploitation of cloud metadata services (AWS EC2 169.254.169.254) to steal IAM credentials and access tokens.",
+    "remediation": "Update to the latest patched version. Block access to cloud metadata endpoints (169.254.169.254). Run MCP servers with IMDSv2 enforcement on AWS.",
+    "added_at": "2026-03-29"
+  },
+  {
+    "id": "THREAT-032",
+    "name": "Azure Data Explorer KQL injection",
+    "match_patterns": {
+      "server_names": ["azure-data-explorer-mcp", "adx-mcp", "kusto-mcp"],
+      "args_contains": ["azure-data-explorer-mcp"]
+    },
+    "severity": "high",
+    "description": "KQL (Kusto Query Language) injection vulnerability in Azure Data Explorer MCP server. Unvalidated query parameters enable data exfiltration and unauthorized query execution.",
+    "cve": "CVE-2026-33980",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2026-33980",
+    "remediation": "Update to the latest version. Parameterize all KQL queries. Implement query validation and sandboxing.",
+    "added_at": "2026-03-29"
+  },
+  {
+    "id": "THREAT-033",
+    "name": "RCE via base64-encoded command injection in args",
+    "match_patterns": {
+      "args_contains": ["base64 -d |", "base64 --decode |", "echo -n ", "| base64 -d", "| base64 --decode"]
+    },
+    "severity": "critical",
+    "description": "MCP server arguments contain base64-encoded command injection. Attacker obfuscates malicious commands using base64 encoding to evade simple pattern detection.",
+    "remediation": "Remove the MCP server. Never pass base64-decoded content directly to shell execution. Audit all argument handling for injection vulnerabilities.",
+    "added_at": "2026-03-29"
+  },
+  {
+    "id": "THREAT-034",
+    "name": "Claude Code WebSocket authentication bypass",
+    "match_patterns": {
+      "args_contains": ["claude-code-mcp", "claude-code-server"]
+    },
+    "severity": "high",
+    "description": "Authentication bypass in Claude Code IDE extensions via WebSocket. Allows unauthenticated local connections to execute tools with the user's full privileges.",
+    "cve": "CVE-2025-52882",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2025-52882",
+    "remediation": "Update Claude Code extensions to the latest version. Ensure WebSocket connections require authentication tokens.",
+    "added_at": "2026-03-29"
+  },
+  {
+    "id": "THREAT-035",
+    "name": "Supply Chain -- Suspicious npm MCP package (shell/exec pattern)",
+    "match_patterns": {
+      "commands": ["npx"],
+      "args_contains": ["mcp-shell", "mcp-exec", "mcp-cmd", "mcp-terminal", "mcp-run-command"]
+    },
+    "severity": "high",
+    "description": "MCP server launched via npm package with name indicating unrestricted shell or command execution capability. These packages often grant full system access without sandboxing.",
+    "remediation": "Remove the MCP server. Verify the package source and audit its code before use. Prefer MCP servers with explicit permission scoping.",
+    "added_at": "2026-03-29"
   }
 ]

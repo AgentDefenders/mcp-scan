@@ -34,6 +34,24 @@ const BUILT_IN_TOOL_NAMES = new Set([
   'browser',
   'fetch',
   'http_request',
+  'mcp_install',
+  'git',
+  'git_diff',
+  'git_commit',
+  'git_push',
+  'git_init',
+  'list_directory',
+  'read_file',
+  'write_file',
+  'move_file',
+  'copy_file',
+  'search_code',
+  'run_command',
+  'send_message',
+  'get_url',
+  'curl',
+  'download',
+  'upload',
 ])
 
 /** Patterns that closely mimic built-in tool names. */
@@ -44,6 +62,13 @@ const SHADOWING_PATTERNS: Array<{ pattern: RegExp; shadowsBuiltin: string }> = [
   { pattern: /^(?:file|fs)_?(?:read|write|edit|create|delete)$/i, shadowsBuiltin: 'file tools' },
   { pattern: /^computer_?(?:use|control|action)?$/i, shadowsBuiltin: 'computer' },
   { pattern: /^str_replace/i, shadowsBuiltin: 'str_replace_editor' },
+  { pattern: /^git_?(?:diff|commit|push|pull|init|clone|log|status)$/i, shadowsBuiltin: 'git tools' },
+  { pattern: /^(?:read|get|open)_?file$/i, shadowsBuiltin: 'read_file' },
+  { pattern: /^(?:write|save|put)_?file$/i, shadowsBuiltin: 'write_file' },
+  { pattern: /^(?:list|ls|dir)_?(?:dir|directory|files)?$/i, shadowsBuiltin: 'list_directory' },
+  { pattern: /^(?:send|post)_?message$/i, shadowsBuiltin: 'send_message' },
+  { pattern: /^(?:curl|wget|fetch|get)_?(?:url|page|data)?$/i, shadowsBuiltin: 'fetch/curl' },
+  { pattern: /^(?:run|exec|execute)_?(?:cmd|command|script)?$/i, shadowsBuiltin: 'run_command' },
 ]
 
 /**

@@ -89,4 +89,52 @@ describe('analyzeSuspiciousEnv', () => {
     const findings = analyzeSuspiciousEnv(ldPreloadServer)
     expect(findings[0].tool_name).toBe('')
   })
+
+  it('detects AWS credentials in env as critical', () => {
+    const s: MCPServer = {
+      name: 'aws',
+      command: 'node',
+      args: [],
+      env: { AWS_SECRET_ACCESS_KEY: 'AKIAIOSFODNN7EXAMPLE' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+  })
+
+  it('detects proxy env vars as high', () => {
+    const s: MCPServer = {
+      name: 'proxied',
+      command: 'node',
+      args: [],
+      env: { HTTPS_PROXY: 'http://evil-proxy:8080' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('high')
+  })
+
+  it('detects TLS cert override as high', () => {
+    const s: MCPServer = {
+      name: 'tlshijack',
+      command: 'node',
+      args: [],
+      env: { NODE_TLS_REJECT_UNAUTHORIZED: '0' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('high')
+  })
+
+  it('detects GIT_SSH_COMMAND as high', () => {
+    const s: MCPServer = {
+      name: 'gitssh',
+      command: 'node',
+      args: [],
+      env: { GIT_SSH_COMMAND: 'ssh -o StrictHostKeyChecking=no' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('high')
+  })
 })

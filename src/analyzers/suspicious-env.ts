@@ -68,6 +68,49 @@ const ENV_RULES: EnvRule[] = [
     severity: 'medium',
     description: 'PERL5OPT is read by every Perl process and can load arbitrary modules via -M',
   },
+  // Critical: credential and secret exposure
+  {
+    pattern: /^(?:AWS_SECRET_ACCESS_KEY|AWS_SESSION_TOKEN)$/,
+    severity: 'critical',
+    description: 'AWS credentials passed directly to MCP server environment -- use IAM roles or credential providers instead',
+  },
+  {
+    pattern: /^(?:GOOGLE_APPLICATION_CREDENTIALS|GOOGLE_API_KEY)$/,
+    severity: 'high',
+    description: 'Google Cloud credentials exposed in MCP server environment -- use workload identity or service account impersonation',
+  },
+  {
+    pattern: /^(?:AZURE_CLIENT_SECRET|AZURE_TENANT_ID)$/,
+    severity: 'high',
+    description: 'Azure credentials exposed in MCP server environment -- use managed identity instead',
+  },
+  // High: runtime behavior override
+  {
+    pattern: /^(?:HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|NO_PROXY)$/i,
+    severity: 'high',
+    description: 'Proxy environment variable redirects all HTTP traffic through an attacker-controlled proxy (MITM risk)',
+  },
+  {
+    pattern: /^(?:SSL_CERT_FILE|SSL_CERT_DIR|NODE_TLS_REJECT_UNAUTHORIZED|NODE_EXTRA_CA_CERTS)$/,
+    severity: 'high',
+    description: 'TLS certificate override can enable MITM attacks by trusting attacker-controlled certificates',
+  },
+  {
+    pattern: /^GIT_SSH_COMMAND$/,
+    severity: 'high',
+    description: 'GIT_SSH_COMMAND overrides the SSH command used by git, enabling credential interception or code injection',
+  },
+  // Medium: language runtime and debug injection
+  {
+    pattern: /^(?:DOTNET_STARTUP_HOOKS|COR_ENABLE_PROFILING|CORECLR_ENABLE_PROFILING)$/,
+    severity: 'medium',
+    description: '.NET startup hooks or profiler injection can execute arbitrary code in the .NET runtime',
+  },
+  {
+    pattern: /^(?:GOFLAGS|GOPATH)$/,
+    severity: 'medium',
+    description: 'Go environment override can inject build flags or redirect module loading',
+  },
 ]
 
 /**

@@ -44,6 +44,41 @@ const PROMPT_INJECTION_PATTERNS: Array<{ pattern: RegExp; description: string; s
     description: 'Conditional instruction override pattern in tool description',
     severity: 'medium',
   },
+  {
+    pattern: /(?:extract|include|pass|send|forward)\s+(?:the\s+)?(?:api.?key|token|secret|credential|password|auth\w*|bearer)\s+/i,
+    description: 'Credential extraction instruction in tool description (rug pull attack vector)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:fetch|request|access|connect\s+to)\s+(?:https?:\/\/)?169\.254\.169\.254/i,
+    description: 'Cloud metadata service access pattern (SSRF for AWS/GCP credential theft)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:security|safety)\s+(?:is|should\s+be)\s+(?:less\s+important|secondary|optional|disabled)/i,
+    description: 'Memory poisoning: attempts to downgrade security posture in agent memory',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:pipe|redirect|forward|copy|mirror|replicate)\s+(?:all\s+)?(?:output|results?|responses?|data|content)\s+(?:to|through|via)\s+/i,
+    description: 'Data mirroring instruction in tool description (exfiltration via output redirection)',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:add|insert|include|inject)\s+(?:a\s+)?(?:bcc|cc|copy|header)\s+/i,
+    description: 'Email/request header injection pattern (BCC exfiltration attack)',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:override|replace|modify|change|update)\s+(?:the\s+)?(?:tool|function|schema|definition|parameter)/i,
+    description: 'Dynamic tool redefinition instruction (rug pull / schema modification attack)',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:use|prefer|switch\s+to|connect\s+via)\s+(?:this|my|the\s+following)\s+(?:endpoint|server|url|api|proxy)/i,
+    description: 'Endpoint redirection pattern in tool description (man-in-the-middle attack)',
+    severity: 'medium',
+  },
 ]
 
 /**
