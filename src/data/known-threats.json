@@ -427,5 +427,180 @@
     "description": "MCP server launched via npm package with name indicating unrestricted shell or command execution capability. These packages often grant full system access without sandboxing.",
     "remediation": "Remove the MCP server. Verify the package source and audit its code before use. Prefer MCP servers with explicit permission scoping.",
     "added_at": "2026-03-29"
+  },
+  {
+    "id": "THREAT-036",
+    "name": "WhatsApp MCP Server chat history exfiltration",
+    "match_patterns": {
+      "server_names": ["whatsapp-mcp", "whatsapp-mcp-server"],
+      "args_contains": ["whatsapp-mcp"]
+    },
+    "severity": "critical",
+    "description": "Tool poisoning vulnerability in WhatsApp MCP server enables attackers to inject malicious instructions that exfiltrate entire chat histories via crafted tool descriptions.",
+    "remediation": "Update to the latest patched version. Review tool descriptions for hidden instructions. Restrict MCP server access to specific chat scopes.",
+    "added_at": "2026-03-30"
+  },
+  {
+    "id": "THREAT-037",
+    "name": "Supabase MCP SQL injection via support tickets",
+    "match_patterns": {
+      "server_names": ["supabase-mcp", "supabase-mcp-server"],
+      "args_contains": ["supabase-mcp"]
+    },
+    "severity": "critical",
+    "description": "SQL injection attack vector in Supabase MCP server. Attackers embed SQL instructions in support tickets that agents process, enabling exfiltration of integration tokens and database credentials.",
+    "remediation": "Update to the latest version. Use parameterized queries. Sanitize all user-provided content before passing to MCP tools. Restrict database permissions to read-only where possible.",
+    "added_at": "2026-03-30"
+  },
+  {
+    "id": "THREAT-038",
+    "name": "Anthropic git server unrestricted git_init (CVE-2025-68143)",
+    "match_patterns": {
+      "args_contains": ["@anthropic/server-git", "@modelcontextprotocol/server-git"]
+    },
+    "severity": "high",
+    "description": "Unrestricted git_init tool in official Anthropic git MCP server can turn sensitive directories (e.g. .ssh) into git repositories, enabling exfiltration of private keys via git operations.",
+    "cve": "CVE-2025-68143",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2025-68143",
+    "remediation": "Update to the latest version of the git server. Restrict git_init to approved directories only.",
+    "added_at": "2026-03-30"
+  },
+  {
+    "id": "THREAT-039",
+    "name": "Supply Chain -- Typosquatted MCP npm package",
+    "match_patterns": {
+      "commands": ["npx"],
+      "args_contains": ["mcpp-", "mpc-server", "mcp-serverr", "mcp-sever", "mcpserver-", "mcp_server"]
+    },
+    "severity": "high",
+    "description": "MCP server installed via npm package with a name resembling common typos of legitimate MCP packages. Typosquatting is a known supply chain attack vector for distributing malware through package registries.",
+    "remediation": "Verify the exact package name against the official repository. Remove any typosquatted packages immediately. Run npm audit to check for known vulnerabilities.",
+    "added_at": "2026-03-30"
+  },
+  {
+    "id": "THREAT-040",
+    "name": "Supply Chain -- Typosquatted MCP PyPI package",
+    "match_patterns": {
+      "commands": ["pip", "pip3", "pipx", "uvx", "uv"],
+      "args_contains": ["mcpp-", "mpc-server", "mcp-serverr", "mcp-sever", "mcpserver-", "mcp_sever"]
+    },
+    "severity": "high",
+    "description": "MCP server installed via pip with a name resembling common typos of legitimate MCP packages. Typosquatting on PyPI has been used to distribute reverse shells and credential stealers targeting MCP users.",
+    "remediation": "Verify the exact package name against the official PyPI listing. Remove any typosquatted packages. Check for active reverse shell connections.",
+    "added_at": "2026-03-30"
+  },
+  {
+    "id": "THREAT-041",
+    "name": "HTTP transport without TLS for remote MCP server",
+    "match_patterns": {
+      "args_contains": ["http://", "--transport=http", "--no-tls", "--insecure"]
+    },
+    "severity": "high",
+    "description": "MCP server configured to use unencrypted HTTP transport. All tool invocations, credentials, and data are transmitted in plaintext, enabling man-in-the-middle attacks and credential interception.",
+    "remediation": "Switch to HTTPS for all remote MCP server connections. Enable TLS certificate validation. Use mTLS for high-security environments.",
+    "added_at": "2026-03-30"
+  },
+  {
+    "id": "THREAT-042",
+    "name": "RCE via Command Injection -- ampersand chaining in args",
+    "match_patterns": {
+      "args_contains": ["&& curl ", "&& wget ", "&&curl ", "&&wget ", "&& bash ", "&&bash ", "& curl ", "& wget "]
+    },
+    "severity": "critical",
+    "description": "MCP server arguments contain shell command injection via ampersand operator chaining. Attacker can chain arbitrary commands after the intended command completes.",
+    "remediation": "Remove the MCP server. Sanitize all arguments for shell metacharacters including &, &&, and other chaining operators.",
+    "added_at": "2026-03-30"
+  },
+  {
+    "id": "THREAT-043",
+    "name": "Docker Escape -- seccomp disabled",
+    "match_patterns": {
+      "args_contains": ["--security-opt=seccomp=unconfined", "--security-opt=seccomp:unconfined", "--security-opt=apparmor=unconfined"]
+    },
+    "severity": "critical",
+    "description": "MCP server container runs with seccomp or AppArmor security profiles disabled. This removes kernel-level syscall filtering and mandatory access controls, enabling container escape.",
+    "remediation": "Remove --security-opt overrides. Use the default seccomp and AppArmor profiles. Apply custom restrictive profiles if the default is too permissive.",
+    "added_at": "2026-03-30"
+  },
+  {
+    "id": "THREAT-044",
+    "name": "Slack MCP Server message exfiltration",
+    "match_patterns": {
+      "server_names": ["slack-mcp", "slack-mcp-server"],
+      "args_contains": ["slack-mcp-server"]
+    },
+    "severity": "high",
+    "description": "Slack MCP server with overly broad OAuth scopes can be exploited to exfiltrate channel messages, DMs, and files. Tool poisoning can inject instructions to silently forward messages to attacker-controlled channels.",
+    "remediation": "Restrict OAuth scopes to minimum required permissions. Review tool descriptions for hidden exfiltration instructions. Monitor Slack API usage for anomalous access patterns.",
+    "added_at": "2026-03-30"
+  },
+  {
+    "id": "THREAT-045",
+    "name": "GitHub MCP Server token scope abuse",
+    "match_patterns": {
+      "server_names": ["github-mcp", "github-mcp-server"],
+      "args_contains": ["github-mcp-server"]
+    },
+    "severity": "high",
+    "description": "GitHub MCP server configured with overly broad personal access token scopes. Tool poisoning can exploit write permissions to push malicious code, create backdoor branches, or modify CI/CD workflows.",
+    "remediation": "Use fine-grained personal access tokens with minimal scopes. Restrict to specific repositories. Prefer GitHub Apps with installation-level permissions over PATs.",
+    "added_at": "2026-03-30"
+  },
+  {
+    "id": "THREAT-046",
+    "name": "Database MCP Server SQL injection via tool parameters",
+    "match_patterns": {
+      "server_names": ["postgres-mcp", "mysql-mcp", "sqlite-mcp", "database-mcp", "db-mcp"],
+      "args_contains": ["postgres-mcp", "mysql-mcp", "sqlite-mcp", "database-mcp"]
+    },
+    "severity": "high",
+    "description": "Database MCP servers that accept raw SQL queries from LLM agents without parameterization. Prompt injection can manipulate the agent into executing DROP, DELETE, or data exfiltration queries.",
+    "remediation": "Use parameterized queries exclusively. Restrict database user to read-only permissions. Implement query allowlists. Never grant DDL privileges to MCP server database users.",
+    "added_at": "2026-03-30"
+  },
+  {
+    "id": "THREAT-047",
+    "name": "Supply Chain -- npm install script execution",
+    "match_patterns": {
+      "commands": ["npx", "npm"],
+      "args_contains": ["--ignore-scripts=false", "--scripts-prepend-node-path"]
+    },
+    "severity": "high",
+    "description": "MCP server installation explicitly enables npm lifecycle scripts. Malicious packages use postinstall scripts to execute arbitrary code during installation, before any security review can occur.",
+    "remediation": "Use --ignore-scripts when installing untrusted MCP packages. Audit package.json scripts before installation. Use npm audit to check for known vulnerabilities.",
+    "added_at": "2026-03-30"
+  },
+  {
+    "id": "THREAT-048",
+    "name": "Cloud metadata SSRF via MCP tool parameters",
+    "match_patterns": {
+      "args_contains": ["169.254.169.254", "metadata.google.internal", "100.100.100.200"]
+    },
+    "severity": "critical",
+    "description": "MCP server arguments reference cloud metadata service endpoints. This enables SSRF attacks to steal IAM credentials, access tokens, and instance metadata from AWS, GCP, or Alibaba Cloud environments.",
+    "remediation": "Block access to cloud metadata endpoints at the network level. Enforce IMDSv2 on AWS. Run MCP servers in isolated network segments without metadata service access.",
+    "added_at": "2026-03-30"
+  },
+  {
+    "id": "THREAT-049",
+    "name": "MCP server with OAuth static client secret",
+    "match_patterns": {
+      "args_contains": ["--client-secret=", "--oauth-secret=", "client_secret="]
+    },
+    "severity": "high",
+    "description": "MCP server configured with a static OAuth client secret in command-line arguments. Secrets in process arguments are visible via /proc and process listing, enabling credential theft.",
+    "remediation": "Use environment variables or secure credential stores for OAuth secrets. Implement PKCE for public clients. Rotate compromised client secrets immediately.",
+    "added_at": "2026-03-30"
+  },
+  {
+    "id": "THREAT-050",
+    "name": "MCP server with disabled certificate validation",
+    "match_patterns": {
+      "args_contains": ["--no-verify-ssl", "--skip-ssl", "--disable-tls", "NODE_TLS_REJECT_UNAUTHORIZED=0", "PYTHONHTTPSVERIFY=0"]
+    },
+    "severity": "critical",
+    "description": "MCP server configured to skip TLS certificate validation. This enables man-in-the-middle attacks where attackers can intercept and modify all traffic between the client and server, including credentials and tool responses.",
+    "remediation": "Enable TLS certificate validation. Use trusted CA certificates. If using self-signed certificates, configure the specific CA bundle rather than disabling validation entirely.",
+    "added_at": "2026-03-30"
   }
 ]

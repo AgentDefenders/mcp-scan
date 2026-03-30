@@ -111,6 +111,43 @@ const ENV_RULES: EnvRule[] = [
     severity: 'medium',
     description: 'Go environment override can inject build flags or redirect module loading',
   },
+  // Critical: credential and secret exposure (additional cloud providers)
+  {
+    pattern: /^(?:ANTHROPIC_API_KEY|OPENAI_API_KEY|GEMINI_API_KEY|COHERE_API_KEY|HUGGING_FACE_TOKEN|HF_TOKEN)$/,
+    severity: 'critical',
+    description: 'AI/LLM provider API key passed directly to MCP server environment -- use credential managers or scoped tokens instead',
+  },
+  {
+    pattern: /^(?:STRIPE_SECRET_KEY|STRIPE_API_KEY|TWILIO_AUTH_TOKEN|SENDGRID_API_KEY)$/,
+    severity: 'critical',
+    description: 'Payment/communication service secret key exposed in MCP server environment -- use scoped API keys with minimal permissions',
+  },
+  {
+    pattern: /^(?:DATABASE_URL|DATABASE_PASSWORD|DB_PASSWORD|REDIS_PASSWORD|REDIS_URL|MONGODB_URI)$/,
+    severity: 'critical',
+    description: 'Database credentials passed directly to MCP server environment -- use IAM authentication or credential rotation',
+  },
+  {
+    pattern: /^(?:GITHUB_TOKEN|GITLAB_TOKEN|BITBUCKET_TOKEN|GH_TOKEN)$/,
+    severity: 'high',
+    description: 'Source control token exposed in MCP server environment -- use fine-grained tokens with minimal repository access',
+  },
+  {
+    pattern: /^(?:NPM_TOKEN|PYPI_TOKEN|NUGET_API_KEY|CARGO_REGISTRY_TOKEN)$/,
+    severity: 'high',
+    description: 'Package registry token exposed in MCP server environment -- enables supply chain attacks via unauthorized package publishing',
+  },
+  // High: debug and profiling exposure
+  {
+    pattern: /^(?:NODE_DEBUG|DEBUG|VERBOSE|TRACE)$/,
+    severity: 'medium',
+    description: 'Debug/verbose mode enabled in MCP server environment -- may leak sensitive data in log output',
+  },
+  {
+    pattern: /^(?:ELECTRON_RUN_AS_NODE)$/,
+    severity: 'high',
+    description: 'ELECTRON_RUN_AS_NODE bypasses Electron sandboxing and enables arbitrary Node.js execution',
+  },
 ]
 
 /**

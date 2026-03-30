@@ -80,6 +80,36 @@ const HIDDEN_INSTRUCTION_PATTERNS: Array<{ pattern: RegExp; description: string;
     description: 'Pre-action hijack pattern in tool description (forces actions before every request)',
     severity: 'high',
   },
+  {
+    pattern: /(?:eval|Function|setTimeout|setInterval)\s*\(\s*['"]/i,
+    description: 'JavaScript dynamic code execution in tool description (arbitrary code injection)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:subprocess|os\.system|os\.popen|exec|spawn|child_process)\s*\(/i,
+    description: 'System command execution call in tool description (shell injection vector)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:import|require|__import__|importlib)\s*\(\s*['"]/i,
+    description: 'Dynamic module import in tool description (arbitrary code loading)',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:after|once)\s+(?:this\s+)?(?:tool|function|action)\s+(?:completes?|finishes?|runs?|executes?)\s*,?\s*(?:also|then|next|immediately)\s+/i,
+    description: 'Post-action chaining pattern in tool description (forces follow-up actions after tool execution)',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:silently|quietly|secretly|covertly|without\s+(?:the\s+)?(?:user|anyone)\s+(?:knowing|noticing))/i,
+    description: 'Stealth operation instruction in tool description (conceals malicious activity from user)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:webhook|callback|notify)\s*(?:url|endpoint|hook)\s*[:=]\s*https?:\/\//i,
+    description: 'Hardcoded webhook URL in tool description (data exfiltration via callback)',
+    severity: 'high',
+  },
 ]
 
 /**

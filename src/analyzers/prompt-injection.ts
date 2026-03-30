@@ -79,6 +79,46 @@ const PROMPT_INJECTION_PATTERNS: Array<{ pattern: RegExp; description: string; s
     description: 'Endpoint redirection pattern in tool description (man-in-the-middle attack)',
     severity: 'medium',
   },
+  {
+    pattern: /(?:read|access|dump|list|scan|search)\s+(?:all\s+)?(?:files?\s+in\s+)?(?:\/etc\/|\/root\/|~\/\.ssh|~\/\.aws|~\/\.config|~\/\.gnupg)/i,
+    description: 'Sensitive filesystem path access pattern (credential harvesting from known secret locations)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:curl|wget|fetch|post|send)\s+(?:.*\s+)?(?:to\s+)?https?:\/\//i,
+    description: 'Outbound HTTP request instruction in tool description (data exfiltration channel)',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:do\s+not|don't|never)\s+(?:log|record|audit|trace|report)/i,
+    description: 'Audit evasion instruction in tool description (attempts to suppress logging)',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:before|after)\s+(?:responding|answering|replying)\s+(?:to\s+)?(?:the\s+)?user/i,
+    description: 'Response interception pattern (injects actions before/after user interactions)',
+    severity: 'medium',
+  },
+  {
+    pattern: /(?:execute|run|eval|exec)\s*\(\s*(?:input|param|arg|data|request|query)/i,
+    description: 'Dynamic code execution pattern in tool description (arbitrary code execution risk)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:replace|swap|substitute)\s+(?:the\s+)?(?:response|output|result|answer)\s+(?:with|to|for)/i,
+    description: 'Response substitution pattern in tool description (output manipulation attack)',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:ignore|bypass|skip|disable)\s+(?:all\s+)?(?:security|auth|permission|access\s+control|validation|verification)/i,
+    description: 'Security bypass instruction in tool description (attempts to disable security controls)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:grant|give|provide|enable)\s+(?:full|admin|root|superuser|elevated)\s+(?:\w+\s+)?(?:access|permission|privilege)/i,
+    description: 'Privilege escalation instruction in tool description (requests unauthorized elevated access)',
+    severity: 'critical',
+  },
 ]
 
 /**

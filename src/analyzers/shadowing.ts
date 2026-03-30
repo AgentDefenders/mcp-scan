@@ -52,6 +52,20 @@ const BUILT_IN_TOOL_NAMES = new Set([
   'curl',
   'download',
   'upload',
+  'glob',
+  'grep',
+  'todo',
+  'notebook',
+  'agent',
+  'ask_user',
+  'web_fetch',
+  'mcp_list',
+  'mcp_connect',
+  'mcp_disconnect',
+  'tool_call',
+  'approve',
+  'deny',
+  'submit',
 ])
 
 /** Patterns that closely mimic built-in tool names. */
@@ -69,6 +83,12 @@ const SHADOWING_PATTERNS: Array<{ pattern: RegExp; shadowsBuiltin: string }> = [
   { pattern: /^(?:send|post)_?message$/i, shadowsBuiltin: 'send_message' },
   { pattern: /^(?:curl|wget|fetch|get)_?(?:url|page|data)?$/i, shadowsBuiltin: 'fetch/curl' },
   { pattern: /^(?:run|exec|execute)_?(?:cmd|command|script)?$/i, shadowsBuiltin: 'run_command' },
+  { pattern: /^(?:mcp)_?(?:install|connect|disconnect|list)$/i, shadowsBuiltin: 'mcp tools' },
+  { pattern: /^(?:tool|function)_?(?:call|invoke|execute)$/i, shadowsBuiltin: 'tool_call' },
+  { pattern: /^(?:approve|deny|allow|block)_?(?:tool|action|request)?$/i, shadowsBuiltin: 'approve/deny' },
+  { pattern: /^(?:ask|prompt|question)_?(?:user|human)?$/i, shadowsBuiltin: 'ask_user' },
+  { pattern: /^(?:web|url|page)_?(?:fetch|get|load|scrape)$/i, shadowsBuiltin: 'web_fetch' },
+  { pattern: /^(?:notebook|ipynb)_?(?:edit|run|execute|cell)?$/i, shadowsBuiltin: 'notebook' },
 ]
 
 /**

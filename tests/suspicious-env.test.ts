@@ -137,4 +137,81 @@ describe('analyzeSuspiciousEnv', () => {
     expect(findings).toHaveLength(1)
     expect(findings[0].severity).toBe('high')
   })
+
+  it('detects AI/LLM API keys as critical', () => {
+    const s: MCPServer = {
+      name: 'ai-server',
+      command: 'node',
+      args: [],
+      env: { OPENAI_API_KEY: 'sk-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('AI/LLM provider')
+  })
+
+  it('detects database credentials as critical', () => {
+    const s: MCPServer = {
+      name: 'db-server',
+      command: 'node',
+      args: [],
+      env: { DATABASE_URL: 'postgres://user:pass@host:5432/db' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('Database credentials')
+  })
+
+  it('detects payment service keys as critical', () => {
+    const s: MCPServer = {
+      name: 'stripe-server',
+      command: 'node',
+      args: [],
+      env: { STRIPE_SECRET_KEY: 'sk_test_12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+  })
+
+  it('detects source control tokens as high', () => {
+    const s: MCPServer = {
+      name: 'git-server',
+      command: 'node',
+      args: [],
+      env: { GITHUB_TOKEN: 'ghp_12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('high')
+    expect(findings[0].description).toContain('Source control token')
+  })
+
+  it('detects package registry tokens as high', () => {
+    const s: MCPServer = {
+      name: 'npm-server',
+      command: 'node',
+      args: [],
+      env: { NPM_TOKEN: 'npm_12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('high')
+    expect(findings[0].description).toContain('Package registry token')
+  })
+
+  it('detects ELECTRON_RUN_AS_NODE as high', () => {
+    const s: MCPServer = {
+      name: 'electron-server',
+      command: 'node',
+      args: [],
+      env: { ELECTRON_RUN_AS_NODE: '1' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('high')
+    expect(findings[0].description).toContain('ELECTRON_RUN_AS_NODE')
+  })
 })
