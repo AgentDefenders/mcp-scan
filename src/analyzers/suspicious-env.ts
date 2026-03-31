@@ -148,6 +148,45 @@ const ENV_RULES: EnvRule[] = [
     severity: 'high',
     description: 'ELECTRON_RUN_AS_NODE bypasses Electron sandboxing and enables arbitrary Node.js execution',
   },
+  // Critical: MCP-specific credential exposure
+  {
+    pattern: /^(?:MCP_API_KEY|MCP_SECRET|MCP_AUTH_TOKEN|MCP_SERVER_TOKEN)$/,
+    severity: 'critical',
+    description: 'MCP server authentication token exposed in environment -- use secure credential stores instead',
+  },
+  {
+    pattern: /^(?:CLAUDE_API_KEY|CLAUDE_SECRET_KEY|ANTHROPIC_AUTH_TOKEN)$/,
+    severity: 'critical',
+    description: 'Claude/Anthropic authentication credential passed directly to MCP server environment',
+  },
+  // High: additional cloud provider and AI credentials
+  {
+    pattern: /^(?:MISTRAL_API_KEY|TOGETHER_API_KEY|GROQ_API_KEY|REPLICATE_API_TOKEN|DEEPSEEK_API_KEY|XAI_API_KEY)$/,
+    severity: 'critical',
+    description: 'AI/LLM provider API key passed directly to MCP server environment -- use credential managers or scoped tokens instead',
+  },
+  {
+    pattern: /^(?:VERCEL_TOKEN|NETLIFY_AUTH_TOKEN|HEROKU_API_KEY|FLY_ACCESS_TOKEN|RAILWAY_TOKEN)$/,
+    severity: 'high',
+    description: 'PaaS deployment token exposed in MCP server environment -- enables unauthorized deployments and infrastructure access',
+  },
+  {
+    pattern: /^(?:DOCKER_PASSWORD|DOCKER_AUTH_CONFIG|DOCKER_TOKEN)$/,
+    severity: 'high',
+    description: 'Docker registry credentials exposed in MCP server environment -- enables supply chain attacks via unauthorized image publishing',
+  },
+  // Medium: debug and telemetry exposure
+  {
+    pattern: /^(?:OTEL_EXPORTER_OTLP_HEADERS|OTEL_EXPORTER_OTLP_ENDPOINT)$/,
+    severity: 'medium',
+    description: 'OpenTelemetry exporter configured in MCP server -- telemetry data may expose sensitive operation details to external endpoints',
+  },
+  // Critical: additional dangerous runtime overrides
+  {
+    pattern: /^(?:PYTHONHTTPSVERIFY|CURL_CA_BUNDLE|REQUESTS_CA_BUNDLE|GIT_SSL_NO_VERIFY)$/,
+    severity: 'critical',
+    description: 'TLS/SSL verification bypass configured in MCP server environment -- enables man-in-the-middle attacks',
+  },
 ]
 
 /**

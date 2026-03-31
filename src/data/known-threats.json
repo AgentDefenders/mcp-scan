@@ -602,5 +602,251 @@
     "description": "MCP server configured to skip TLS certificate validation. This enables man-in-the-middle attacks where attackers can intercept and modify all traffic between the client and server, including credentials and tool responses.",
     "remediation": "Enable TLS certificate validation. Use trusted CA certificates. If using self-signed certificates, configure the specific CA bundle rather than disabling validation entirely.",
     "added_at": "2026-03-30"
+  },
+  {
+    "id": "THREAT-051",
+    "name": "Anthropic Filesystem MCP Server sandbox escape (CVE-2025-53109/53110)",
+    "match_patterns": {
+      "args_contains": ["@modelcontextprotocol/server-filesystem@0.", "@anthropic/server-filesystem@0."]
+    },
+    "severity": "critical",
+    "description": "Sandbox escape vulnerabilities in Anthropic Filesystem MCP Server (versions prior to 0.6.3 / 2025.7.1). Attackers can escape the server sandbox, tamper with arbitrary files on the host, and execute arbitrary code via symlink following and path traversal.",
+    "cve": "CVE-2025-53109",
+    "reference": "https://cymulate.com/blog/cve-2025-53109-53110-escaperoute-anthropic/",
+    "remediation": "Update @modelcontextprotocol/server-filesystem to version 2025.7.1 or later. Restrict allowed directories to the minimum required. Run MCP servers in sandboxed containers.",
+    "added_at": "2026-03-31"
+  },
+  {
+    "id": "THREAT-052",
+    "name": "Claude Code Hooks RCE via malicious project files (CVE-2025-59536)",
+    "match_patterns": {
+      "args_contains": ["claude-code-hooks", "claude-hooks-mcp"],
+      "server_names": ["claude-code-hooks", "claude-hooks"]
+    },
+    "severity": "critical",
+    "description": "Remote code execution in Claude Code via malicious project configuration files (CLAUDE.md, .claude/settings.json). Attackers craft repository files that execute arbitrary hooks when a developer opens the project with Claude Code.",
+    "cve": "CVE-2025-59536",
+    "reference": "https://research.checkpoint.com/2026/rce-and-api-token-exfiltration-through-claude-code-project-files-cve-2025-59536/",
+    "remediation": "Update Claude Code to the latest version. Review project-level CLAUDE.md and .claude/ directories before opening untrusted repositories. Disable automatic hook execution for untrusted projects.",
+    "added_at": "2026-03-31"
+  },
+  {
+    "id": "THREAT-053",
+    "name": "Claude Code API token exfiltration via env vars (CVE-2026-21852)",
+    "match_patterns": {
+      "args_contains": ["claude-code-exfil", "claude-env-mcp"],
+      "server_names": ["claude-code-exfil"]
+    },
+    "severity": "critical",
+    "description": "API credential theft in Claude Code via malicious MCP server configurations and environment variable exfiltration. Attackers embed MCP servers in project configs that steal ANTHROPIC_API_KEY and other credentials at runtime.",
+    "cve": "CVE-2026-21852",
+    "reference": "https://research.checkpoint.com/2026/rce-and-api-token-exfiltration-through-claude-code-project-files-cve-2025-59536/",
+    "remediation": "Update Claude Code to the latest version. Never store API keys in project-level configuration files. Use credential managers or environment-specific secret stores.",
+    "added_at": "2026-03-31"
+  },
+  {
+    "id": "THREAT-054",
+    "name": "MCP Ruby SDK session hijacking (CVE-2026-33946)",
+    "match_patterns": {
+      "args_contains": ["streamable-http", "mcp-ruby"],
+      "server_names": ["mcp-ruby", "ruby-mcp"]
+    },
+    "severity": "high",
+    "description": "Session hijacking vulnerability in the MCP Ruby SDK (versions prior to 0.9.2). The streamable_http_transport implementation allows an attacker who obtains a valid session ID to completely hijack the victim's Server-Sent Events stream and intercept all real-time data.",
+    "cve": "CVE-2026-33946",
+    "reference": "https://cve.threatint.eu/CVE/CVE-2026-33946",
+    "remediation": "Update the MCP Ruby SDK to version 0.9.2 or later. Use secure session token generation with sufficient entropy. Implement session binding to client IP/User-Agent.",
+    "added_at": "2026-03-31"
+  },
+  {
+    "id": "THREAT-055",
+    "name": "MCP Inspector arbitrary code execution (CVE-2025-49596)",
+    "match_patterns": {
+      "args_contains": ["@modelcontextprotocol/inspector", "mcp-inspector"],
+      "server_names": ["mcp-inspector", "inspector"]
+    },
+    "severity": "high",
+    "description": "Arbitrary code execution vulnerability in Anthropic's MCP Inspector tool. Allows attackers to execute arbitrary code when inspecting untrusted MCP server configurations.",
+    "cve": "CVE-2025-49596",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2025-49596",
+    "remediation": "Update MCP Inspector to the latest patched version. Never inspect untrusted MCP servers without sandboxing. Run the inspector in an isolated container.",
+    "added_at": "2026-03-31"
+  },
+  {
+    "id": "THREAT-056",
+    "name": "oatpp-mcp prompt hijacking (CVE-2025-6515)",
+    "match_patterns": {
+      "args_contains": ["oatpp-mcp"],
+      "server_names": ["oatpp-mcp"]
+    },
+    "severity": "high",
+    "description": "Prompt hijacking vulnerability in the oatpp-mcp framework. Allows attackers to take over MCP sessions by injecting crafted prompt sequences that override the server's intended behavior.",
+    "cve": "CVE-2025-6515",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2025-6515",
+    "remediation": "Update oatpp-mcp to the latest patched version. Implement input validation and sanitization on all prompt content. Use session isolation between clients.",
+    "added_at": "2026-03-31"
+  },
+  {
+    "id": "THREAT-057",
+    "name": "MCP Playwright/Puppeteer browser automation abuse",
+    "match_patterns": {
+      "server_names": ["playwright-mcp", "puppeteer-mcp", "browser-mcp", "browserbase-mcp"],
+      "args_contains": ["playwright-mcp", "puppeteer-mcp", "mcp-browser", "@anthropic/browser-mcp", "browserbase-mcp"]
+    },
+    "severity": "high",
+    "description": "Browser automation MCP servers grant agents full browser control including navigating to arbitrary URLs, filling forms, and reading page content. Prompt injection can manipulate the agent into visiting phishing sites, exfiltrating cookies, or performing unauthorized OAuth flows.",
+    "remediation": "Restrict browser MCP servers to specific URL allowlists. Disable cookie and credential access. Use headless mode with network isolation. Monitor for navigation to unexpected domains.",
+    "added_at": "2026-03-31"
+  },
+  {
+    "id": "THREAT-058",
+    "name": "MCP server DNS rebinding attack on localhost",
+    "match_patterns": {
+      "args_contains": ["--host=127.0.0.1", "--port=", "localhost:", "127.0.0.1:"]
+    },
+    "severity": "medium",
+    "description": "MCP servers bound to localhost with HTTP transport (no TLS) are vulnerable to DNS rebinding attacks. An attacker can craft a malicious webpage that rebinds DNS to 127.0.0.1 and sends requests to the local MCP server, bypassing same-origin policy protections.",
+    "remediation": "Use authentication tokens for all MCP server endpoints, even on localhost. Validate the Host header to reject requests from unexpected origins. Prefer stdio transport over HTTP for local servers.",
+    "added_at": "2026-03-31"
+  },
+  {
+    "id": "THREAT-059",
+    "name": "Supply Chain -- Malicious Go MCP package",
+    "match_patterns": {
+      "commands": ["go"],
+      "args_contains": ["mcp-hack", "mcp-exfil", "mcp-backdoor", "mcp-pwn"]
+    },
+    "severity": "critical",
+    "description": "MCP server installed via Go binary with suspicious package name indicating malicious intent. Go MCP servers can be compiled with embedded malware that executes at startup without runtime dependencies.",
+    "remediation": "Remove the binary immediately. Verify the source repository and module path on pkg.go.dev before reinstalling. Check for unexpected network connections.",
+    "added_at": "2026-03-31"
+  },
+  {
+    "id": "THREAT-060",
+    "name": "Supply Chain -- Malicious Docker MCP image",
+    "match_patterns": {
+      "commands": ["docker"],
+      "args_contains": ["mcp-hack", "mcp-exfil", "mcp-backdoor", "mcp-pwn", "hack-mcp", "exfil-mcp"]
+    },
+    "severity": "critical",
+    "description": "MCP server launched via Docker image with suspicious name. Malicious Docker images can include rootkits, cryptocurrency miners, or data exfiltration tools that run with container privileges.",
+    "remediation": "Remove the container immediately. Only use MCP Docker images from verified publishers. Scan images with container security tools before deployment.",
+    "added_at": "2026-03-31"
+  },
+  {
+    "id": "THREAT-061",
+    "name": "MCP SSE transport without authentication",
+    "match_patterns": {
+      "args_contains": ["--transport=sse", "--transport=streamable-http", "--sse-port=", "--no-auth"]
+    },
+    "severity": "high",
+    "description": "MCP server using SSE or Streamable HTTP transport without authentication. Remote MCP transports without authentication tokens allow any network-adjacent attacker to connect and execute tools with the server's privileges.",
+    "remediation": "Always require authentication tokens for SSE and Streamable HTTP transports. Use TLS for all remote connections. Implement rate limiting and client certificate validation.",
+    "added_at": "2026-03-31"
+  },
+  {
+    "id": "THREAT-062",
+    "name": "MCP server with write access to CI/CD pipelines",
+    "match_patterns": {
+      "server_names": ["jenkins-mcp", "circleci-mcp", "actions-mcp", "gitlab-ci-mcp", "ci-mcp"],
+      "args_contains": ["jenkins-mcp", "circleci-mcp", "actions-mcp", "gitlab-ci-mcp"]
+    },
+    "severity": "high",
+    "description": "MCP server with write access to CI/CD systems (Jenkins, CircleCI, GitHub Actions, GitLab CI). Prompt injection can manipulate the agent into modifying build pipelines, injecting malicious build steps, or exfiltrating CI secrets.",
+    "remediation": "Restrict CI/CD MCP servers to read-only access. Use separate service accounts with minimal permissions. Require manual approval for any pipeline modifications.",
+    "added_at": "2026-03-31"
+  },
+  {
+    "id": "THREAT-063",
+    "name": "MCP server with Kubernetes cluster access",
+    "match_patterns": {
+      "server_names": ["kubernetes-mcp", "k8s-mcp", "kubectl-mcp", "helm-mcp"],
+      "args_contains": ["kubernetes-mcp", "k8s-mcp", "kubectl-mcp", "helm-mcp", "--kubeconfig"]
+    },
+    "severity": "critical",
+    "description": "MCP server with access to Kubernetes cluster management. Prompt injection can manipulate the agent into deploying malicious containers, modifying RBAC policies, exfiltrating secrets from the cluster, or causing denial of service by scaling resources.",
+    "remediation": "Restrict Kubernetes MCP servers to read-only access with minimal RBAC roles. Never grant cluster-admin privileges. Use namespaced service accounts. Implement admission controller policies.",
+    "added_at": "2026-03-31"
+  },
+  {
+    "id": "THREAT-064",
+    "name": "MCP server with cloud IAM management access",
+    "match_patterns": {
+      "server_names": ["aws-iam-mcp", "gcp-iam-mcp", "azure-ad-mcp", "iam-mcp"],
+      "args_contains": ["aws-iam-mcp", "iam-management-mcp", "gcp-iam-mcp"]
+    },
+    "severity": "critical",
+    "description": "MCP server with access to cloud IAM management APIs. Prompt injection can manipulate the agent into creating new admin users, modifying access policies, or granting unauthorized access to cloud resources.",
+    "remediation": "Never grant IAM write access to MCP servers. Use read-only IAM policies. Implement SCPs or organization policies to prevent privilege escalation. Require MFA for all IAM modifications.",
+    "added_at": "2026-03-31"
+  },
+  {
+    "id": "THREAT-065",
+    "name": "RCE via Command Injection -- newline in args",
+    "match_patterns": {
+      "args_contains": ["\\n curl ", "\\n wget ", "\\n bash ", "\\r\\n", "%0a", "%0d"]
+    },
+    "severity": "critical",
+    "description": "MCP server arguments contain command injection via newline or carriage return characters (URL-encoded or literal). Newline injection can break out of intended command context and execute arbitrary commands on a new line.",
+    "remediation": "Remove the MCP server. Strip or reject newline characters in all arguments. Use argument arrays instead of concatenated command strings.",
+    "added_at": "2026-03-31"
+  },
+  {
+    "id": "THREAT-066",
+    "name": "MCP server requesting excessive tool permissions",
+    "match_patterns": {
+      "args_contains": ["--allow-all", "--no-sandbox", "--unrestricted", "--disable-security", "--allow-dangerous"]
+    },
+    "severity": "high",
+    "description": "MCP server configured with flags that disable security restrictions or request unrestricted permissions. These flags bypass sandboxing, permission checks, and security controls intended to limit tool capabilities.",
+    "remediation": "Remove permission-bypassing flags. Configure MCP servers with the principle of least privilege. Use explicit permission allowlists instead of blanket allow-all flags.",
+    "added_at": "2026-03-31"
+  },
+  {
+    "id": "THREAT-067",
+    "name": "MCP server with email/messaging send capability",
+    "match_patterns": {
+      "server_names": ["email-mcp", "gmail-mcp", "outlook-mcp", "sendgrid-mcp", "ses-mcp", "smtp-mcp", "teams-mcp", "discord-mcp"],
+      "args_contains": ["gmail-mcp", "outlook-mcp", "sendgrid-mcp", "ses-mcp", "smtp-mcp"]
+    },
+    "severity": "medium",
+    "description": "MCP server with email or messaging send capabilities. Prompt injection can manipulate the agent into sending phishing emails, spam, or exfiltrating data via outbound messages to attacker-controlled addresses.",
+    "remediation": "Restrict MCP email servers to specific recipient allowlists. Implement outbound content scanning. Require human approval for messages to external addresses. Monitor for BCC injection.",
+    "added_at": "2026-03-31"
+  },
+  {
+    "id": "THREAT-068",
+    "name": "MCP server with payment/billing API access",
+    "match_patterns": {
+      "server_names": ["stripe-mcp", "payment-mcp", "billing-mcp", "paypal-mcp", "square-mcp"],
+      "args_contains": ["stripe-mcp", "payment-mcp", "billing-mcp", "paypal-mcp"]
+    },
+    "severity": "high",
+    "description": "MCP server with access to payment processing APIs. Prompt injection can manipulate the agent into creating unauthorized charges, modifying billing records, issuing refunds to attacker accounts, or exfiltrating payment method details.",
+    "remediation": "Use read-only API keys for MCP payment integrations. Never grant refund or charge creation permissions. Implement transaction amount limits. Require human approval for all financial operations.",
+    "added_at": "2026-03-31"
+  },
+  {
+    "id": "THREAT-069",
+    "name": "MCP server with secret manager access",
+    "match_patterns": {
+      "server_names": ["vault-mcp", "secrets-mcp", "doppler-mcp", "1password-mcp", "bitwarden-mcp", "aws-secrets-mcp"],
+      "args_contains": ["vault-mcp", "secrets-manager-mcp", "doppler-mcp", "1password-mcp", "bitwarden-mcp"]
+    },
+    "severity": "critical",
+    "description": "MCP server with access to secret management systems (HashiCorp Vault, AWS Secrets Manager, Doppler, 1Password). Prompt injection can manipulate the agent into reading and exfiltrating all stored secrets, API keys, database passwords, and certificates.",
+    "remediation": "Never grant MCP servers broad read access to secret managers. Use scoped access policies for specific secrets only. Implement audit logging for all secret access. Require human approval for reading production secrets.",
+    "added_at": "2026-03-31"
+  },
+  {
+    "id": "THREAT-070",
+    "name": "MCP server tunneling via ngrok/cloudflare tunnel",
+    "match_patterns": {
+      "args_contains": ["ngrok", "cloudflared", "--tunnel", "localtunnel", "bore.pub", "localhost.run"]
+    },
+    "severity": "high",
+    "description": "MCP server exposed to the internet via tunneling services (ngrok, Cloudflare Tunnel, localtunnel). Tunneling bypasses firewall and network security controls, exposing local MCP servers to unauthenticated remote access.",
+    "remediation": "Remove tunnel configurations from MCP servers. If remote access is required, use VPN or mTLS instead of public tunnels. Implement authentication on all exposed endpoints.",
+    "added_at": "2026-03-31"
   }
 ]

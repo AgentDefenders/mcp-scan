@@ -110,12 +110,69 @@ const HIDDEN_INSTRUCTION_PATTERNS: Array<{ pattern: RegExp; description: string;
     description: 'Hardcoded webhook URL in tool description (data exfiltration via callback)',
     severity: 'high',
   },
+  {
+    pattern: /(?:override|rewrite|modify)\s+(?:the\s+)?(?:output|response|result)\s+(?:to|before|with)/i,
+    description: 'Output manipulation pattern in tool description (ATPA: Advanced Tool Poisoning via output rewriting)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:append|prepend|inject|embed)\s+(?:to|into|in)\s+(?:the\s+)?(?:output|response|result|return)/i,
+    description: 'Output injection pattern in tool description (ATPA: malicious content injected into tool responses)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:when|if)\s+(?:the\s+)?(?:user|developer|admin)\s+(?:is\s+)?(?:not\s+)?(?:watching|looking|present|active|monitoring)/i,
+    description: 'Conditional execution based on user presence (rug pull / delayed activation pattern)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:on|after)\s+(?:first|initial|1st)\s+(?:run|execution|call|use)[\s\S]{0,50}(?:then|switch|change|activate)/i,
+    description: 'Delayed activation pattern in tool description (MCP rug pull: benign on first run, malicious after)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:pipe|chain|forward)\s+(?:the\s+)?(?:result|output|data)\s+(?:to|into|through)\s+(?:another|next|the)\s+(?:tool|function|server)/i,
+    description: 'Cross-tool data chaining in tool description (confused deputy attack via tool output forwarding)',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:json|xml|yaml)\s*(?:\.parse|\.load|\.decode|parse|unmarshal)\s*\(/i,
+    description: 'Data deserialization in tool description (potential deserialization attack vector)',
+    severity: 'high',
+  },
 ]
+
+/**
+ * Extract all string values from a JSON schema object for Full-Schema Poisoning
+ * (FSP) analysis. Every field in the schema is a potential injection surface,
+ * not just the description.
+ */
+function extractSchemaStrings(schema: Record<string, unknown>): Array<{ value: string; path: string }> {
+  const results: Array<{ value: string; path: string }> = []
+
+  function walk(obj: unknown, currentPath: string): void {
+    if (typeof obj === 'string' && obj.length > 0) {
+      results.push({ value: obj, path: currentPath })
+    } else if (Array.isArray(obj)) {
+      for (let i = 0; i < obj.length; i++) {
+        walk(obj[i], `${currentPath}[${i}]`)
+      }
+    } else if (obj !== null && typeof obj === 'object') {
+      for (const [key, val] of Object.entries(obj as Record<string, unknown>)) {
+        walk(val, currentPath ? `${currentPath}.${key}` : key)
+      }
+    }
+  }
+
+  walk(schema, '')
+  return results
+}
 
 /**
  * Analyze a server's tools for tool poisoning attacks.
  * Tool poisoning embeds hidden instructions in tool descriptions using Unicode
  * tricks or HTML to manipulate the LLM without human reviewers noticing.
+ * Also performs Full-Schema Poisoning (FSP) analysis on inputSchema fields.
  */
 export function analyzeToolPoisoning(server: MCPServer): Finding[] {
   const findings: Finding[] = []
@@ -153,6 +210,44 @@ export function analyzeToolPoisoning(server: MCPServer): Finding[] {
           evidence: match[0].slice(0, 200),
           remediation: TOOL_POISONING_REMEDIATION,
         })
+      }
+    }
+
+    // Full-Schema Poisoning (FSP): scan inputSchema string values for hidden instructions.
+    // Every field in the tool schema (titles, defaults, enum values, examples) is an injection surface.
+    if (tool.inputSchema) {
+      const schemaStrings = extractSchemaStrings(tool.inputSchema)
+      for (const { value, path } of schemaStrings) {
+        for (const { pattern, description: unicodeDesc } of UNICODE_HIDDEN_PATTERNS) {
+          if (pattern.test(value)) {
+            const match = value.match(pattern)
+            findings.push({
+              analyzer: 'tool-poisoning',
+              severity: 'critical',
+              server_name: server.name,
+              tool_name: tool.name,
+              description: `Full-Schema Poisoning: ${unicodeDesc} (in inputSchema.${path})`,
+              field: `inputSchema.${path}`,
+              evidence: match ? match[0].slice(0, 100) : '(detected)',
+              remediation: 'Review the tool inputSchema for hidden instructions. All schema fields (title, description, default, enum, examples) are potential injection surfaces. Compare against the official schema definition.',
+            })
+          }
+        }
+        for (const { pattern, description: instrDesc, severity } of HIDDEN_INSTRUCTION_PATTERNS) {
+          const match = value.match(pattern)
+          if (match) {
+            findings.push({
+              analyzer: 'tool-poisoning',
+              severity,
+              server_name: server.name,
+              tool_name: tool.name,
+              description: `Full-Schema Poisoning: ${instrDesc} (in inputSchema.${path})`,
+              field: `inputSchema.${path}`,
+              evidence: match[0].slice(0, 200),
+              remediation: 'Review the tool inputSchema for hidden instructions. All schema fields (title, description, default, enum, examples) are potential injection surfaces. Compare against the official schema definition.',
+            })
+          }
+        }
       }
     }
   }

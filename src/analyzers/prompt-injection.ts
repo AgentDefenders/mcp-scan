@@ -119,6 +119,51 @@ const PROMPT_INJECTION_PATTERNS: Array<{ pattern: RegExp; description: string; s
     description: 'Privilege escalation instruction in tool description (requests unauthorized elevated access)',
     severity: 'critical',
   },
+  {
+    pattern: /(?:sample|sampling|create_message|createMessage)\s*\(.*(?:inject|override|ignore|system)/i,
+    description: 'MCP Sampling abuse pattern: uses sampling/create_message to inject prompts into the LLM context',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:use|call|invoke)\s+(?:the\s+)?(?:sampling|create_message)\s+(?:to|and|for)\s+/i,
+    description: 'MCP Sampling-based injection: instructs the agent to use sampling capabilities for unauthorized actions',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:store|persist|write|save)\s+(?:this|the|these)\s+(?:instruction|rule|directive|command)s?\s+(?:to|in|into)\s+(?:memory|context|rag|knowledge|vector)/i,
+    description: 'RAG/memory poisoning: attempts to persist malicious instructions in vector stores or knowledge bases',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:whenever|every\s+time|each\s+time|always)\s+(?:a\s+)?(?:user|developer|anyone)\s+(?:asks?|requests?|queries?|mentions?)/i,
+    description: 'Persistent behavioral override: installs a standing instruction that triggers on future user interactions',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:this\s+tool|I)\s+(?:am|is)\s+(?:a\s+)?(?:trusted|safe|verified|official|authorized)\s+/i,
+    description: 'Trust escalation claim in tool description (social engineering the LLM into trusting the tool)',
+    severity: 'medium',
+  },
+  {
+    pattern: /(?:do\s+not|don't|never)\s+(?:ask|prompt|require|request)\s+(?:for\s+)?(?:confirmation|approval|permission|consent)/i,
+    description: 'Approval bypass instruction: attempts to skip human-in-the-loop confirmation for sensitive actions',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:encode|convert|transform)\s+(?:the\s+)?(?:output|response|data|result)\s+(?:to|as|in|into)\s+(?:base64|hex|url.?encod|rot13)/i,
+    description: 'Output encoding instruction: attempts to obfuscate exfiltrated data via encoding to evade content filters',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:embed|hide|conceal|include)\s+(?:the\s+)?(?:data|output|result|secret|credential)\s+(?:in|inside|within)\s+(?:the\s+)?(?:image|url|link|markdown|html)/i,
+    description: 'Steganographic exfiltration: attempts to hide stolen data in images, URLs, or markup',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:render|display|show|output)\s+(?:an?\s+)?(?:image|img|markdown\s+image)\s+(?:from|with|using)\s+(?:https?:\/\/|data:)/i,
+    description: 'Image-based exfiltration via markdown rendering: encodes stolen data in image URL parameters',
+    severity: 'high',
+  },
 ]
 
 /**

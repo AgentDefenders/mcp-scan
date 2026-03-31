@@ -214,4 +214,69 @@ describe('analyzeSuspiciousEnv', () => {
     expect(findings[0].severity).toBe('high')
     expect(findings[0].description).toContain('ELECTRON_RUN_AS_NODE')
   })
+
+  it('detects MCP-specific auth tokens as critical', () => {
+    const s: MCPServer = {
+      name: 'mcp-auth',
+      command: 'node',
+      args: [],
+      env: { MCP_API_KEY: 'mcp_12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('MCP server authentication')
+  })
+
+  it('detects additional AI provider keys as critical', () => {
+    const s: MCPServer = {
+      name: 'ai-provider',
+      command: 'node',
+      args: [],
+      env: { MISTRAL_API_KEY: 'mk-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('AI/LLM provider')
+  })
+
+  it('detects PaaS deployment tokens as high', () => {
+    const s: MCPServer = {
+      name: 'vercel-server',
+      command: 'node',
+      args: [],
+      env: { VERCEL_TOKEN: 'vc_test_12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('high')
+    expect(findings[0].description).toContain('PaaS deployment')
+  })
+
+  it('detects Docker registry credentials as high', () => {
+    const s: MCPServer = {
+      name: 'docker-server',
+      command: 'node',
+      args: [],
+      env: { DOCKER_PASSWORD: 'secret123' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('high')
+    expect(findings[0].description).toContain('Docker registry')
+  })
+
+  it('detects TLS verification bypass as critical', () => {
+    const s: MCPServer = {
+      name: 'no-verify',
+      command: 'node',
+      args: [],
+      env: { GIT_SSL_NO_VERIFY: '1' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('TLS/SSL verification bypass')
+  })
 })
