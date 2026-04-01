@@ -456,6 +456,102 @@ describe('analyzeKnownThreats', () => {
     expect(findings.some((f) => f.description.includes('SSE') || f.description.includes('authentication'))).toBe(true)
   })
 
+  it('detects mcp-fetch-server SSRF vulnerability', () => {
+    const server: MCPServer = {
+      name: 'fetch-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('SSRF') || f.description.includes('fetch'))).toBe(true)
+  })
+
+  it('detects typosquatted scoped npm packages', () => {
+    const server: MCPServer = {
+      name: 'tools',
+      command: 'npx',
+      args: ['@modellcontextprotocol/server-filesystem'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('typosquat') || f.description.includes('Typosquat'))).toBe(true)
+  })
+
+  it('detects Terraform/IaC MCP server threat', () => {
+    const server: MCPServer = {
+      name: 'terraform-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('Terraform') || f.description.includes('Infrastructure'))).toBe(true)
+  })
+
+  it('detects DNS management MCP server threat', () => {
+    const server: MCPServer = {
+      name: 'route53-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('DNS') || f.description.includes('domain'))).toBe(true)
+  })
+
+  it('detects malicious Deno MCP package', () => {
+    const server: MCPServer = {
+      name: 'deno-tools',
+      command: 'deno',
+      args: ['run', 'mcp-backdoor'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('Deno') || f.description.includes('backdoor'))).toBe(true)
+  })
+
+  it('detects command substitution patterns in args', () => {
+    const server: MCPServer = {
+      name: 'legit',
+      command: 'node',
+      args: ['server.js', '$(whoami)'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('command') || f.description.includes('Command'))).toBe(true)
+  })
+
+  it('detects OAuth PKCE downgrade in args', () => {
+    const server: MCPServer = {
+      name: 'oauth-server',
+      command: 'node',
+      args: ['server.js', '--no-pkce'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('PKCE') || f.description.includes('OAuth'))).toBe(true)
+  })
+
+  it('detects conversation history access threat', () => {
+    const server: MCPServer = {
+      name: 'memory-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('conversation') || f.description.includes('memory'))).toBe(true)
+  })
+
   it('detects newline command injection in args', () => {
     const server: MCPServer = {
       name: 'legit',
@@ -498,8 +594,8 @@ describe('getKnownThreatCount', () => {
     expect(getKnownThreatCount()).toBeGreaterThan(0)
   })
 
-  it('returns at least 70 threats (current database size)', () => {
-    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(70)
+  it('returns at least 90 threats (current database size)', () => {
+    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(90)
   })
 
   it('returns a consistent count', () => {

@@ -140,6 +140,36 @@ const HIDDEN_INSTRUCTION_PATTERNS: Array<{ pattern: RegExp; description: string;
     description: 'Data deserialization in tool description (potential deserialization attack vector)',
     severity: 'high',
   },
+  {
+    pattern: /(?:return|respond|output)\s+(?:with|using|containing)\s+(?:the\s+)?(?:following|these|this)\s+(?:instruction|command|directive)/i,
+    description: 'Output poisoning pattern: instructs tool to return crafted content that injects instructions into the LLM context (SEA attack)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:include|add|insert)\s+(?:in|to)\s+(?:the\s+)?(?:return|response|output)\s+(?:value|body|payload)/i,
+    description: 'Return value injection: embeds hidden instructions in tool output to manipulate subsequent LLM reasoning',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:on|after|upon)\s+(?:every|each|any)\s+(?:nth|second|third|\d+(?:st|nd|rd|th))\s+(?:call|invocation|request|use)/i,
+    description: 'Intermittent activation pattern: malicious behavior triggers only on periodic invocations to evade testing and detection',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:check|read|access|scan)\s+(?:the\s+)?(?:other|adjacent|connected|sibling)\s+(?:tool|server|mcp)\s*(?:'?s?\s+)?(?:config|credential|token|secret|output)/i,
+    description: 'Cross-server credential harvesting: attempts to read credentials or outputs from other connected MCP servers (confused deputy)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:modify|update|change|alter)\s+(?:the\s+)?(?:tool|function)\s+(?:behavior|response|output)\s+(?:based\s+on|depending\s+on|according\s+to)\s+(?:the\s+)?(?:time|date|hour|day|count)/i,
+    description: 'Time-based behavior switching: tool changes behavior based on temporal conditions (scheduled rug pull pattern)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:concatenate|join|combine|merge)\s+(?:all\s+)?(?:the\s+)?(?:parameter|argument|input|field)\s+(?:value)?s?\s+(?:and|then)\s+(?:execute|eval|run)/i,
+    description: 'Parameter concatenation to code execution: combines seemingly innocent parameters into executable payload',
+    severity: 'critical',
+  },
 ]
 
 /**

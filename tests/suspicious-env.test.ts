@@ -279,4 +279,95 @@ describe('analyzeSuspiciousEnv', () => {
     expect(findings[0].severity).toBe('critical')
     expect(findings[0].description).toContain('TLS/SSL verification bypass')
   })
+
+  it('detects vector database API keys as critical', () => {
+    const s: MCPServer = {
+      name: 'vector-db',
+      command: 'node',
+      args: [],
+      env: { PINECONE_API_KEY: 'pk-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('Vector database')
+  })
+
+  it('detects Cloudflare API token as critical', () => {
+    const s: MCPServer = {
+      name: 'cf-server',
+      command: 'node',
+      args: [],
+      env: { CLOUDFLARE_API_TOKEN: 'cf-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('Cloudflare')
+  })
+
+  it('detects Kubernetes credentials as critical', () => {
+    const s: MCPServer = {
+      name: 'k8s-server',
+      command: 'node',
+      args: [],
+      env: { KUBECONFIG: '/home/user/.kube/config' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('Kubernetes')
+  })
+
+  it('detects Vault/IaC tokens as critical', () => {
+    const s: MCPServer = {
+      name: 'vault-server',
+      command: 'node',
+      args: [],
+      env: { VAULT_TOKEN: 'hvs.test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('Infrastructure')
+  })
+
+  it('detects Slack tokens as high', () => {
+    const s: MCPServer = {
+      name: 'slack-server',
+      command: 'node',
+      args: [],
+      env: { SLACK_BOT_TOKEN: 'xoxb-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('high')
+    expect(findings[0].description).toContain('Messaging platform')
+  })
+
+  it('detects additional AI provider API keys as critical', () => {
+    const s: MCPServer = {
+      name: 'fireworks-server',
+      command: 'node',
+      args: [],
+      env: { FIREWORKS_API_KEY: 'fw-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('AI/LLM provider')
+  })
+
+  it('detects observability platform credentials as medium', () => {
+    const s: MCPServer = {
+      name: 'dd-server',
+      command: 'node',
+      args: [],
+      env: { DATADOG_API_KEY: 'dd-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('medium')
+    expect(findings[0].description).toContain('Observability')
+  })
 })

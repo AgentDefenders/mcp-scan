@@ -187,6 +187,55 @@ const ENV_RULES: EnvRule[] = [
     severity: 'critical',
     description: 'TLS/SSL verification bypass configured in MCP server environment -- enables man-in-the-middle attacks',
   },
+  // Critical: additional AI/LLM provider credentials (2026 additions)
+  {
+    pattern: /^(?:FIREWORKS_API_KEY|PERPLEXITY_API_KEY|CEREBRAS_API_KEY|SAMBANOVA_API_KEY|AI21_API_KEY|VOYAGE_API_KEY|ANYSCALE_API_KEY)$/,
+    severity: 'critical',
+    description: 'AI/LLM provider API key passed directly to MCP server environment -- use credential managers or scoped tokens instead',
+  },
+  {
+    pattern: /^(?:PINECONE_API_KEY|WEAVIATE_API_KEY|QDRANT_API_KEY|CHROMA_API_KEY|MILVUS_TOKEN)$/,
+    severity: 'critical',
+    description: 'Vector database API key exposed in MCP server environment -- enables unauthorized access to RAG knowledge bases and embeddings',
+  },
+  // High: infrastructure and deployment credentials
+  {
+    pattern: /^(?:CLOUDFLARE_API_TOKEN|CLOUDFLARE_API_KEY|CF_API_TOKEN)$/,
+    severity: 'critical',
+    description: 'Cloudflare API credentials exposed in MCP server environment -- enables DNS hijacking, WAF bypass, and domain takeover',
+  },
+  {
+    pattern: /^(?:TERRAFORM_TOKEN|TF_TOKEN_|PULUMI_ACCESS_TOKEN|VAULT_TOKEN)$/,
+    severity: 'critical',
+    description: 'Infrastructure-as-Code or secret manager token exposed in MCP server environment -- enables infrastructure manipulation and secret theft',
+  },
+  {
+    pattern: /^(?:SLACK_BOT_TOKEN|SLACK_TOKEN|SLACK_WEBHOOK_URL|DISCORD_TOKEN|DISCORD_BOT_TOKEN|TELEGRAM_BOT_TOKEN)$/,
+    severity: 'high',
+    description: 'Messaging platform token exposed in MCP server environment -- enables unauthorized message sending, channel access, and data exfiltration',
+  },
+  {
+    pattern: /^(?:SENTRY_DSN|SENTRY_AUTH_TOKEN|DATADOG_API_KEY|DD_API_KEY|NEW_RELIC_LICENSE_KEY)$/,
+    severity: 'medium',
+    description: 'Observability platform credentials exposed in MCP server environment -- enables telemetry data exfiltration and alert manipulation',
+  },
+  // Critical: container and orchestration credentials
+  {
+    pattern: /^(?:KUBECONFIG|KUBERNETES_SERVICE_TOKEN|K8S_TOKEN|KUBE_TOKEN)$/,
+    severity: 'critical',
+    description: 'Kubernetes credentials exposed in MCP server environment -- enables container deployment, secret access, and cluster compromise',
+  },
+  // High: additional runtime injection vectors
+  {
+    pattern: /^(?:RUBY_GC_HEAP_INIT_SLOTS|RUBY_GC_MALLOC_LIMIT)$/,
+    severity: 'medium',
+    description: 'Ruby GC tuning parameters in MCP server environment -- while not directly exploitable, unusual presence may indicate environment manipulation',
+  },
+  {
+    pattern: /^(?:UV_THREADPOOL_SIZE|NODE_CLUSTER_SCHED_POLICY|UV_USE_IO_URING)$/,
+    severity: 'medium',
+    description: 'Node.js/libuv runtime internals overridden in MCP server environment -- may affect concurrency behavior and enable side-channel attacks',
+  },
 ]
 
 /**

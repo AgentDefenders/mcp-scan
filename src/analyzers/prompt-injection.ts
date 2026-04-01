@@ -164,6 +164,41 @@ const PROMPT_INJECTION_PATTERNS: Array<{ pattern: RegExp; description: string; s
     description: 'Image-based exfiltration via markdown rendering: encodes stolen data in image URL parameters',
     severity: 'high',
   },
+  {
+    pattern: /(?:when|if)\s+(?:the\s+)?(?:output|response|result)\s+(?:contains?|includes?|has)\s+(?:error|fail|exception)/i,
+    description: 'Error-conditional behavior: changes tool behavior based on error states to exploit error handling paths for malicious actions',
+    severity: 'medium',
+  },
+  {
+    pattern: /(?:forward|relay|proxy|pass)\s+(?:this\s+)?(?:request|message|query|prompt)\s+(?:to|through|via)\s+(?:another|a\s+different|the\s+other)\s+(?:server|endpoint|api|service)/i,
+    description: 'Request relay/proxy pattern: forwards agent requests through attacker-controlled intermediary for interception or modification',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:create|generate|produce|write)\s+(?:a\s+)?(?:new\s+)?(?:tool|function|server|mcp)\s+(?:definition|config|configuration|manifest)/i,
+    description: 'Dynamic tool creation instruction: attempts to generate new MCP tool definitions at runtime, enabling persistent backdoors',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:use|leverage|exploit)\s+(?:the\s+)?(?:sampling|create_message|completions?)\s+(?:api|endpoint|capability)\s+(?:to\s+)?(?:generate|create|produce)/i,
+    description: 'MCP Sampling API exploitation: uses server-initiated sampling capability to generate attacker-controlled content within the trusted context',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:set|configure|establish)\s+(?:a\s+)?(?:recurring|periodic|scheduled|cron)\s+(?:task|job|action|execution)/i,
+    description: 'Persistent scheduled task injection: attempts to install recurring malicious operations that survive session boundaries',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:access|read|query|fetch)\s+(?:the\s+)?(?:conversation|chat|message)\s+(?:history|log|archive|context)\s+(?:and|to|for)\s+/i,
+    description: 'Conversation history exfiltration: accesses prior conversation content to harvest sensitive information shared in earlier messages',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:tell|inform|instruct)\s+(?:the\s+)?(?:other|next|connected)\s+(?:tool|server|agent|mcp)\s+(?:to|that)/i,
+    description: 'Cross-tool instruction injection: attempts to influence behavior of other connected MCP servers through the shared agent context',
+    severity: 'high',
+  },
 ]
 
 /**
