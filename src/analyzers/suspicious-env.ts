@@ -236,6 +236,48 @@ const ENV_RULES: EnvRule[] = [
     severity: 'medium',
     description: 'Node.js/libuv runtime internals overridden in MCP server environment -- may affect concurrency behavior and enable side-channel attacks',
   },
+  // Critical: additional AI/ML and agent credentials (2026 Q2)
+  {
+    pattern: /^(?:GOOGLE_GENAI_API_KEY|GOOGLE_AI_API_KEY|GEMINI_API_KEY_2|VERTEX_AI_TOKEN)$/,
+    severity: 'critical',
+    description: 'Google AI/Gemini API key passed directly to MCP server environment -- use workload identity or service account impersonation instead',
+  },
+  {
+    pattern: /^(?:CURSOR_API_KEY|WINDSURF_API_KEY|CLINE_API_KEY|CONTINUE_API_KEY)$/,
+    severity: 'critical',
+    description: 'IDE AI extension API key exposed in MCP server environment -- enables unauthorized access to the AI service and billing account',
+  },
+  {
+    pattern: /^(?:MCP_PROXY_TOKEN|MCP_GATEWAY_SECRET|MCP_RELAY_KEY)$/,
+    severity: 'critical',
+    description: 'MCP proxy or gateway authentication token exposed in environment -- enables unauthorized access to MCP infrastructure',
+  },
+  {
+    pattern: /^(?:SSH_AUTH_SOCK|SSH_AGENT_PID)$/,
+    severity: 'critical',
+    description: 'SSH agent socket exposed to MCP server environment -- enables unauthorized SSH key usage and remote server access',
+  },
+  {
+    pattern: /^(?:SUPABASE_SERVICE_ROLE_KEY|SUPABASE_ANON_KEY|FIREBASE_TOKEN|FIREBASE_SERVICE_ACCOUNT)$/,
+    severity: 'critical',
+    description: 'Backend-as-a-Service credentials exposed in MCP server environment -- enables full database access and user impersonation',
+  },
+  {
+    pattern: /^(?:DOPPLER_TOKEN|DOPPLER_PROJECT|INFISICAL_TOKEN|CHAMBER_KMS_KEY_ALIAS)$/,
+    severity: 'critical',
+    description: 'Secret management platform credentials exposed in MCP server environment -- enables access to all managed secrets',
+  },
+  // High: build and CI credentials
+  {
+    pattern: /^(?:CIRCLE_TOKEN|TRAVIS_TOKEN|BUILDKITE_AGENT_TOKEN|JENKINS_API_TOKEN|DRONE_TOKEN)$/,
+    severity: 'high',
+    description: 'CI/CD platform token exposed in MCP server environment -- enables unauthorized build triggers and pipeline manipulation',
+  },
+  {
+    pattern: /^(?:SNYK_TOKEN|SONAR_TOKEN|CODECOV_TOKEN|COVERALLS_REPO_TOKEN)$/,
+    severity: 'high',
+    description: 'Code quality/security platform token exposed in MCP server environment -- enables tampering with security scan results',
+  },
 ]
 
 /**

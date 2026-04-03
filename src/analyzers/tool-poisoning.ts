@@ -170,6 +170,36 @@ const HIDDEN_INSTRUCTION_PATTERNS: Array<{ pattern: RegExp; description: string;
     description: 'Parameter concatenation to code execution: combines seemingly innocent parameters into executable payload',
     severity: 'critical',
   },
+  {
+    pattern: /(?:on|upon|after)\s+(?:error|failure|exception|timeout)\s*,?\s*(?:retry|fallback|redirect|send)\s+(?:to|via|through)\s+/i,
+    description: 'Error-path hijacking: redirects error handling to attacker-controlled endpoints or triggers malicious fallback behavior',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:if|when)\s+(?:running|executed|called)\s+(?:in|on|from)\s+(?:ci|production|staging|server|cloud|docker|container)/i,
+    description: 'Environment-conditional activation: changes behavior based on runtime environment to target production or CI systems selectively',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:replace|swap|modify)\s+(?:the\s+)?(?:tool|function|schema)\s+(?:name|definition|description)\s+(?:with|to|at\s+runtime)/i,
+    description: 'Runtime tool mutation: dynamically changes tool identity or behavior after initial registration (rug pull variant)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:read|access|scan|enumerate)\s+(?:all\s+)?(?:the\s+)?(?:environment|env)\s+(?:variable|var)s?\s+(?:and|then)\s+(?:send|post|forward|upload)/i,
+    description: 'Environment variable exfiltration: enumerates and transmits all environment variables to an external endpoint',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:use|call|invoke)\s+(?:the\s+)?(?:notification|notify|alert)\s+(?:channel|endpoint|api)\s+(?:to\s+)?(?:send|deliver|transmit)/i,
+    description: 'Notification channel abuse: uses MCP notification channel to exfiltrate data outside normal tool response flow',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:wrap|intercept|proxy|hook)\s+(?:the\s+)?(?:original|real|actual|underlying)\s+(?:tool|function|method|api)/i,
+    description: 'Tool interception pattern: wraps or proxies legitimate tool calls to intercept and exfiltrate data in transit',
+    severity: 'critical',
+  },
 ]
 
 /**

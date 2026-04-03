@@ -370,4 +370,95 @@ describe('analyzeSuspiciousEnv', () => {
     expect(findings[0].severity).toBe('medium')
     expect(findings[0].description).toContain('Observability')
   })
+
+  it('detects SSH_AUTH_SOCK as critical', () => {
+    const s: MCPServer = {
+      name: 'ssh-server',
+      command: 'node',
+      args: [],
+      env: { SSH_AUTH_SOCK: '/tmp/ssh-agent.sock' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('SSH agent socket')
+  })
+
+  it('detects Supabase service role key as critical', () => {
+    const s: MCPServer = {
+      name: 'supabase-server',
+      command: 'node',
+      args: [],
+      env: { SUPABASE_SERVICE_ROLE_KEY: 'eyJhbGciOiJIUzI1NiJ9.test' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('Backend-as-a-Service')
+  })
+
+  it('detects Doppler token as critical', () => {
+    const s: MCPServer = {
+      name: 'doppler-server',
+      command: 'node',
+      args: [],
+      env: { DOPPLER_TOKEN: 'dp.st.test_12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('Secret management')
+  })
+
+  it('detects CI/CD platform tokens as high', () => {
+    const s: MCPServer = {
+      name: 'ci-server',
+      command: 'node',
+      args: [],
+      env: { BUILDKITE_AGENT_TOKEN: 'bk-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('high')
+    expect(findings[0].description).toContain('CI/CD platform')
+  })
+
+  it('detects code quality platform tokens as high', () => {
+    const s: MCPServer = {
+      name: 'snyk-server',
+      command: 'node',
+      args: [],
+      env: { SNYK_TOKEN: 'snyk-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('high')
+    expect(findings[0].description).toContain('Code quality')
+  })
+
+  it('detects MCP proxy token as critical', () => {
+    const s: MCPServer = {
+      name: 'mcp-proxy',
+      command: 'node',
+      args: [],
+      env: { MCP_PROXY_TOKEN: 'proxy-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('MCP proxy')
+  })
+
+  it('detects IDE AI extension API keys as critical', () => {
+    const s: MCPServer = {
+      name: 'cursor-server',
+      command: 'node',
+      args: [],
+      env: { CURSOR_API_KEY: 'cursor-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('IDE AI extension')
+  })
 })

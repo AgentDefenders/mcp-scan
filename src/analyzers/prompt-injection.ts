@@ -199,6 +199,36 @@ const PROMPT_INJECTION_PATTERNS: Array<{ pattern: RegExp; description: string; s
     description: 'Cross-tool instruction injection: attempts to influence behavior of other connected MCP servers through the shared agent context',
     severity: 'high',
   },
+  {
+    pattern: /(?:include|add|attach|append)\s+(?:the\s+)?(?:system\s+prompt|instructions?|rules?|context)\s+(?:in|as|to)\s+(?:the\s+)?(?:param|argument|input|request)/i,
+    description: 'System prompt elicitation: instructs the LLM to leak system prompt content into MCP tool parameters for exfiltration',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:you\s+are|act\s+as|pretend\s+to\s+be|roleplay\s+as)\s+(?:a\s+)?(?:different|new|special|admin|root|system)/i,
+    description: 'Role injection: attempts to change the LLM identity or privileges through tool description role assignment',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:parse|interpret|treat|process)\s+(?:the\s+)?(?:response|output|result|return)\s+(?:as|like)\s+(?:code|command|instruction|executable)/i,
+    description: 'Response-as-code injection: instructs the LLM to treat server responses as executable instructions rather than data',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:recursively|repeatedly|continuously|infinitely)\s+(?:call|invoke|execute|trigger|run)\s+(?:this|the|itself)/i,
+    description: 'Recursive tool invocation: attempts infinite or excessive self-invocation to drain compute quota or cause denial of service',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:download|fetch|load|import)\s+(?:and\s+)?(?:execute|run|eval|install)\s+(?:from|via)\s+(?:https?:\/\/|ftp:\/\/)/i,
+    description: 'Remote code loading: downloads and executes code from external URLs (drive-by download attack)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:copy|clone|replicate|mirror)\s+(?:the\s+)?(?:entire|full|complete|whole)\s+(?:repository|codebase|project|directory)/i,
+    description: 'Codebase exfiltration: attempts to copy entire repository contents for intellectual property theft',
+    severity: 'high',
+  },
 ]
 
 /**

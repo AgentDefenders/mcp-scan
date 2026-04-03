@@ -587,6 +587,126 @@ describe('analyzeKnownThreats', () => {
     expect(findings.length).toBeGreaterThan(0)
     expect(findings.some((f) => f.description.includes('Go') || f.description.includes('backdoor'))).toBe(true)
   })
+
+  it('detects MCP Streamable HTTP response splitting (CVE-2026-38012)', () => {
+    const server: MCPServer = {
+      name: 'stream-server',
+      command: 'node',
+      args: ['server.js', '--transport=streamable-http'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('CVE-2026-38012') || f.description.includes('response splitting'))).toBe(true)
+  })
+
+  it('detects MCP tool description mutation threat', () => {
+    const server: MCPServer = {
+      name: 'dynamic-tools',
+      command: 'node',
+      args: ['server.js', '--dynamic-tools'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('dynamically update') || f.description.includes('rug pull'))).toBe(true)
+  })
+
+  it('detects malicious Bun MCP package', () => {
+    const server: MCPServer = {
+      name: 'bun-tools',
+      command: 'bunx',
+      args: ['mcp-backdoor'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('Bun') || f.description.includes('backdoor'))).toBe(true)
+  })
+
+  it('detects MCP server with vector database write access', () => {
+    const server: MCPServer = {
+      name: 'pinecone-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('vector database') || f.description.includes('RAG poisoning'))).toBe(true)
+  })
+
+  it('detects MCP server with container registry access', () => {
+    const server: MCPServer = {
+      name: 'ecr-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('container') || f.description.includes('registry'))).toBe(true)
+  })
+
+  it('detects MCP server impersonating Anthropic packages', () => {
+    const server: MCPServer = {
+      name: 'fake-anthropic',
+      command: 'npx',
+      args: ['@anthropic-official/mcp-server'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('impersonate') || f.description.includes('Anthropic'))).toBe(true)
+  })
+
+  it('detects shell wrapper launch pattern', () => {
+    const server: MCPServer = {
+      name: 'shell-wrapped',
+      command: 'node',
+      args: ['server.js', 'sh -c echo hello'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('shell wrapper') || f.description.includes('Shell'))).toBe(true)
+  })
+
+  it('detects GitHub Actions workflow dispatch MCP server', () => {
+    const server: MCPServer = {
+      name: 'gh-actions-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('GitHub Actions') || f.description.includes('workflow'))).toBe(true)
+  })
+
+  it('detects MCP server with SSH agent access', () => {
+    const server: MCPServer = {
+      name: 'ssh-tools',
+      command: 'node',
+      args: ['server.js', '--ssh-agent', 'SSH_AUTH_SOCK'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('SSH') || f.description.includes('ssh'))).toBe(true)
+  })
+
+  it('detects auto-approve exploitation pattern', () => {
+    const server: MCPServer = {
+      name: 'yolo',
+      command: 'node',
+      args: ['server.js', '--auto-approve', '--yolo-mode'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('auto-approve') || f.description.includes('Auto-approve'))).toBe(true)
+  })
 })
 
 describe('getKnownThreatCount', () => {
@@ -594,8 +714,8 @@ describe('getKnownThreatCount', () => {
     expect(getKnownThreatCount()).toBeGreaterThan(0)
   })
 
-  it('returns at least 90 threats (current database size)', () => {
-    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(90)
+  it('returns at least 115 threats (current database size)', () => {
+    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(115)
   })
 
   it('returns a consistent count', () => {
