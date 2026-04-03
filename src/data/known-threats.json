@@ -1371,5 +1371,81 @@
     "description": "MCP server launched via shell wrapper (sh -c, cmd /c) instead of direct process execution. Shell wrapping enables environment variable expansion, glob expansion, and command substitution in server arguments, turning otherwise-safe configurations into command injection vectors.",
     "remediation": "Launch MCP servers via direct process execution, never through shell wrappers. Use argument arrays instead of command strings. If shell wrapping is unavoidable, escape all arguments for the target shell.",
     "added_at": "2026-04-03"
+  },
+  {
+    "id": "THREAT-116",
+    "name": "Supply Chain -- LiteLLM compromised versions (TeamPCP)",
+    "match_patterns": {
+      "commands": ["pip", "pip3", "pipx", "uvx", "uv"],
+      "args_contains": ["litellm==1.82.7", "litellm==1.82.8", "litellm@1.82.7", "litellm@1.82.8"]
+    },
+    "severity": "critical",
+    "description": "TeamPCP threat group compromised LiteLLM versions 1.82.7 and 1.82.8 (95M+ monthly downloads). The malicious versions contain a multi-stage credential stealer targeting SSH keys, cloud provider tokens, Kubernetes secrets, cryptocurrency wallets, and .env files. LiteLLM sits between applications and AI providers with access to all API keys.",
+    "reference": "https://www.trendmicro.com/en_us/research/26/c/inside-litellm-supply-chain-compromise.html",
+    "remediation": "Remove LiteLLM versions 1.82.7 and 1.82.8 immediately. Pin to a known-safe version (>= 1.82.9). Rotate ALL credentials accessible to the LLM gateway, including API keys, cloud tokens, SSH keys, and database passwords.",
+    "added_at": "2026-04-03"
+  },
+  {
+    "id": "THREAT-117",
+    "name": "Supply Chain -- LiteLLM MCP gateway with compromised routing",
+    "match_patterns": {
+      "server_names": ["litellm-mcp", "litellm-proxy-mcp", "litellm-gateway-mcp"],
+      "args_contains": ["litellm-mcp", "litellm-proxy", "litellm-gateway"]
+    },
+    "severity": "high",
+    "description": "MCP server using LiteLLM as an LLM routing proxy. LiteLLM sits between applications and AI providers with access to all API keys and request/response content. A compromised LiteLLM instance can intercept credentials, modify prompts, exfiltrate conversation data, and redirect requests to attacker-controlled models.",
+    "remediation": "Pin LiteLLM to a verified safe version. Use direct provider API keys instead of routing proxies. Implement request/response auditing. Monitor for unexpected model endpoint redirections.",
+    "added_at": "2026-04-03"
+  },
+  {
+    "id": "THREAT-118",
+    "name": "Supply Chain -- TeamPCP campaign indicators (Trivy, Checkmarx)",
+    "match_patterns": {
+      "commands": ["npx", "npm"],
+      "args_contains": ["@pcp-team/", "@teampcp/", "pcp-mcp", "teampcp-mcp"]
+    },
+    "severity": "critical",
+    "description": "TeamPCP threat group (active December 2025 - March 2026) has compromised multiple developer tools including Aqua Trivy, CheckMarx VS Code extensions, and npm packages with self-propagating worms. The group specifically targets AI/ML infrastructure and supply chains.",
+    "reference": "https://www.helpnetsecurity.com/2026/03/25/teampcp-supply-chain-attacks/",
+    "remediation": "Audit all developer tool versions for TeamPCP indicators. Monitor for unusual outbound connections from security scanners and IDE extensions. Check npm audit for compromised packages.",
+    "added_at": "2026-04-03"
+  },
+  {
+    "id": "THREAT-119",
+    "name": "Agent-to-Agent (A2A) session smuggling via MCP bridge",
+    "match_patterns": {
+      "server_names": ["a2a-mcp", "agent-bridge-mcp", "multi-agent-mcp", "agent2agent-mcp"],
+      "args_contains": ["a2a-bridge", "agent-bridge-mcp", "multi-agent-mcp", "--a2a-endpoint"]
+    },
+    "severity": "critical",
+    "description": "MCP servers bridging Agent-to-Agent (A2A) communication channels. Attackers inject crafted session context that persists across agent boundaries, carrying malicious instructions from one agent conversation into another. Enables cross-agent credential theft and cascading prompt injection.",
+    "reference": "https://unit42.paloaltonetworks.com/agent-session-smuggling-in-agent2agent-systems/",
+    "remediation": "Implement strict session isolation between agents. Sanitize all cross-agent context before passing to MCP tools. Use separate credentials per agent. Monitor for unexpected cross-agent data flows.",
+    "added_at": "2026-04-03"
+  },
+  {
+    "id": "THREAT-120",
+    "name": "MCP token drain via cyclic tool call patterns (Overthinking Loop)",
+    "match_patterns": {
+      "args_contains": ["--no-call-limit", "--unlimited-calls", "--no-recursion-limit", "--max-depth=unlimited"]
+    },
+    "severity": "medium",
+    "description": "MCP servers configured without tool call limits enabling Overthinking Loop attacks. Malicious tools induce cyclic reasoning trajectories in the agent, amplifying token consumption up to 142.4x via trivial text repetition, staged checklists, and recursive subtask generation composed into cyclic call structures.",
+    "reference": "https://arxiv.org/html/2602.14798v1",
+    "remediation": "Implement per-session tool call limits and token budgets. Detect circular tool call patterns. Set maximum recursion depth for tool invocations. Use circuit breakers to halt runaway agent loops.",
+    "added_at": "2026-04-03"
+  },
+  {
+    "id": "THREAT-121",
+    "name": "Lazarus Group malicious AI/ML npm and PyPI packages",
+    "match_patterns": {
+      "commands": ["npx", "pip", "pip3", "pipx", "uvx", "uv"],
+      "args_contains": ["ml-classifier-", "ai-model-hub-", "deeplearn-utils-", "neural-net-helper"]
+    },
+    "severity": "critical",
+    "description": "Lazarus APT group (North Korea) planted malicious packages in npm and PyPI targeting AI/ML developers. Packages use legitimate-sounding ML/AI names to attract downloads. Payloads include credential stealers, cryptocurrency wallet drainers, and persistent backdoors.",
+    "reference": "https://thehackernews.com/2026/02/lazarus-campaign-plants-malicious.html",
+    "remediation": "Verify all AI/ML packages against known-good registries. Check author reputation and download counts before installing. Use lockfiles and dependency scanning. Monitor for packages with suspiciously generic AI/ML names.",
+    "added_at": "2026-04-03"
   }
 ]

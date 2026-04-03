@@ -707,6 +707,54 @@ describe('analyzeKnownThreats', () => {
     expect(findings.length).toBeGreaterThan(0)
     expect(findings.some((f) => f.description.includes('auto-approve') || f.description.includes('Auto-approve'))).toBe(true)
   })
+
+  it('detects LiteLLM compromised versions (TeamPCP)', () => {
+    const server: MCPServer = {
+      name: 'llm-gateway',
+      command: 'pip',
+      args: ['run', 'litellm==1.82.7'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('LiteLLM') || f.description.includes('TeamPCP'))).toBe(true)
+  })
+
+  it('detects A2A session smuggling MCP bridge', () => {
+    const server: MCPServer = {
+      name: 'a2a-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('Agent-to-Agent') || f.description.includes('session smuggling'))).toBe(true)
+  })
+
+  it('detects LiteLLM MCP gateway servers', () => {
+    const server: MCPServer = {
+      name: 'litellm-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('LiteLLM') || f.description.includes('routing'))).toBe(true)
+  })
+
+  it('detects overthinking loop configuration', () => {
+    const server: MCPServer = {
+      name: 'unlimited',
+      command: 'node',
+      args: ['server.js', '--no-call-limit', '--no-recursion-limit'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('Overthinking') || f.description.includes('cyclic') || f.description.includes('token'))).toBe(true)
+  })
 })
 
 describe('getKnownThreatCount', () => {
@@ -714,8 +762,8 @@ describe('getKnownThreatCount', () => {
     expect(getKnownThreatCount()).toBeGreaterThan(0)
   })
 
-  it('returns at least 115 threats (current database size)', () => {
-    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(115)
+  it('returns at least 121 threats (current database size)', () => {
+    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(121)
   })
 
   it('returns a consistent count', () => {
