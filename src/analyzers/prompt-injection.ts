@@ -229,6 +229,41 @@ const PROMPT_INJECTION_PATTERNS: Array<{ pattern: RegExp; description: string; s
     description: 'Codebase exfiltration: attempts to copy entire repository contents for intellectual property theft',
     severity: 'high',
   },
+  {
+    pattern: /(?:modify|edit|update|change|write\s+to)\s+(?:the\s+)?(?:mcp[\s._-]?(?:json|config|settings)|(?:claude|cursor|windsurf|vscode)[\s/._-]*(?:mcp|config|settings)[\s._-]*(?:\.?json)?)/i,
+    description: 'MCP config injection: instructs the agent to modify IDE MCP configuration files to inject malicious servers (SANDWORM_MODE vector)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:add|install|register|inject)\s+(?:a\s+)?(?:new\s+)?(?:mcp|tool)\s+(?:server|endpoint|configuration|entry)/i,
+    description: 'MCP server injection: instructs the agent to install unauthorized MCP servers into the active configuration',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:this|the)\s+(?:server|tool|service)\s+(?:is|has\s+been)\s+(?:officially|formally)\s+(?:audited|reviewed|certified|endorsed|verified)/i,
+    description: 'False audit claim: social engineers the LLM by claiming the server has been security-audited or officially endorsed',
+    severity: 'medium',
+  },
+  {
+    pattern: /(?:use|prefer|select|choose)\s+(?:this\s+tool|me)\s+(?:over|instead\s+of|before|rather\s+than)\s+(?:other|competing|alternative|similar)/i,
+    description: 'Tool preference manipulation: instructs the LLM to prefer this tool over legitimate alternatives (MPMA attack)',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:read|access|dump|list)\s+(?:the\s+)?(?:~\/\.cursor|~\/\.claude|~\/\.vscode|~\/\.config\/code|claude_desktop_config)/i,
+    description: 'IDE config exfiltration: attempts to read MCP client configuration files containing server definitions and credentials',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:write|inject|insert|append)\s+(?:to|into)\s+(?:the\s+)?(?:~\/\.bashrc|~\/\.zshrc|~\/\.profile|~\/\.bash_profile|crontab)/i,
+    description: 'Shell persistence injection: attempts to write malicious entries into shell startup files or cron for persistent access',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:dns|hostname)\s+(?:rebind|redirect|resolve)\s+(?:to|via)\s+(?:127\.0\.0\.1|localhost|0\.0\.0\.0)/i,
+    description: 'DNS rebinding instruction: attempts to exploit DNS rebinding to access localhost-bound MCP servers from external origins',
+    severity: 'critical',
+  },
 ]
 
 /**

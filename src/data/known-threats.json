@@ -1447,5 +1447,321 @@
     "reference": "https://thehackernews.com/2026/02/lazarus-campaign-plants-malicious.html",
     "remediation": "Verify all AI/ML packages against known-good registries. Check author reputation and download counts before installing. Use lockfiles and dependency scanning. Monitor for packages with suspiciously generic AI/ML names.",
     "added_at": "2026-04-03"
+  },
+  {
+    "id": "THREAT-122",
+    "name": "SANDWORM_MODE -- npm typosquatting MCP server injection campaign",
+    "match_patterns": {
+      "commands": ["npx", "npm"],
+      "args_contains": ["sandworm-", "sandworm_mode", "sw-mode-mcp", "sw_mcp"]
+    },
+    "severity": "critical",
+    "description": "SANDWORM_MODE campaign (February 2026) deployed 19 typosquatting npm packages impersonating popular utilities. The malware injects MCP server configurations into Claude Code, Claude Desktop, Cursor, VS Code Continue, and Windsurf/Codeium, allowing threat actors to feed hidden instructions and read sensitive files from compromised developer machines.",
+    "reference": "https://blog.socket.dev/sandworm-mode-mcp-injection-campaign",
+    "remediation": "Remove any recently installed packages matching the SANDWORM_MODE indicators. Audit MCP configuration files for unauthorized server entries. Rotate all credentials accessible from compromised machines.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-123",
+    "name": "MCP TypeScript SDK DNS rebinding (CVE-2025-66414)",
+    "match_patterns": {
+      "args_contains": ["@modelcontextprotocol/sdk@0.", "@modelcontextprotocol/sdk@1.0", "@modelcontextprotocol/sdk@1.1", "@modelcontextprotocol/sdk@1.2"]
+    },
+    "severity": "high",
+    "description": "DNS rebinding vulnerability in MCP TypeScript SDK versions prior to 1.24.0. Localhost-bound SSE and Streamable HTTP servers lack DNS rebinding protection by default, allowing malicious websites to pivot through the browser and execute MCP tools on the local server.",
+    "cve": "CVE-2025-66414",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2025-66414",
+    "remediation": "Update @modelcontextprotocol/sdk to version 1.24.0 or later. Validate Host headers on all HTTP-based MCP servers. Use stdio transport for local-only servers.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-124",
+    "name": "MCP Python SDK DNS rebinding (CVE-2025-66416)",
+    "match_patterns": {
+      "commands": ["pip", "pip3", "pipx", "uvx", "uv"],
+      "args_contains": ["mcp==0.", "mcp==1.0", "mcp==1.1", "mcp==1.2", "mcp[cli]==0.", "mcp[cli]==1.0", "mcp[cli]==1.1", "mcp[cli]==1.2"]
+    },
+    "severity": "high",
+    "description": "DNS rebinding vulnerability in MCP Python SDK (FastMCP) versions prior to 1.23.0. SSE and Streamable HTTP transports on localhost are vulnerable to DNS rebinding attacks from malicious websites, enabling unauthorized tool execution via the browser.",
+    "cve": "CVE-2025-66416",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2025-66416",
+    "remediation": "Update the MCP Python SDK to version 1.23.0 or later. Add Host header validation. Prefer stdio transport for local development servers.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-125",
+    "name": "FastMCP OAuthProxy confused deputy (CVE-2026-27124)",
+    "match_patterns": {
+      "args_contains": ["fastmcp", "fast-mcp", "FastMCP"],
+      "server_names": ["fastmcp", "fast-mcp"]
+    },
+    "severity": "critical",
+    "description": "Missing consent verification in FastMCP OAuthProxy callback (CVE-2026-27124). Attackers exploit static client IDs, dynamic client registration, and consent cookies to obtain OAuth authorization codes without proper user consent. Demonstrated against GitHub OAuth integration enabling unauthorized repository access.",
+    "cve": "CVE-2026-27124",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2026-27124",
+    "remediation": "Update FastMCP to the latest patched version. Implement PKCE with per-request state validation. Verify user consent at every OAuth callback. Use dynamic client registration with strict redirect URI validation.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-126",
+    "name": "Axios supply chain compromise (Sapphire Sleet / DPRK)",
+    "match_patterns": {
+      "commands": ["npx", "npm"],
+      "args_contains": ["axios@1.7.8", "axios@1.7.9"]
+    },
+    "severity": "critical",
+    "description": "Axios npm package versions 1.7.8 and 1.7.9 (100M+ weekly downloads) compromised via hijacked maintainer account. Microsoft Threat Intelligence attributed this to Sapphire Sleet (North Korean state actor). The malicious versions contain credential stealers targeting environment variables, SSH keys, and browser session tokens.",
+    "reference": "https://www.microsoft.com/en-us/security/blog/2026/03/axios-supply-chain-compromise/",
+    "remediation": "Pin axios to version 1.7.10 or later. Rotate all credentials accessible from affected environments. Audit lockfiles for compromised versions. Enable npm provenance verification.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-127",
+    "name": "MCP tool description whitespace hiding attack",
+    "match_patterns": {
+      "server_names": ["random-facts-mcp", "fun-facts-mcp", "daily-facts-mcp"],
+      "args_contains": ["random-facts-mcp", "fun-facts-mcp", "daily-facts-mcp"]
+    },
+    "severity": "critical",
+    "description": "Demonstrated attack where a benign-looking MCP server (e.g., 'random fact of the day') hides malicious instructions after many trailing spaces in tool descriptions, making them invisible without horizontal scrolling. After a sleeper period, the server changes its tool definition to manipulate other connected MCP servers (e.g., WhatsApp) into leaking message history.",
+    "remediation": "Trim and normalize whitespace in all tool descriptions before display. Implement tool description pinning and drift detection. Review server tool descriptions regularly with --watch mode.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-128",
+    "name": "MCP dynamic client registration abuse",
+    "match_patterns": {
+      "args_contains": ["--dynamic-registration", "--register-client", "--client-registration-endpoint"]
+    },
+    "severity": "high",
+    "description": "MCP servers using OAuth dynamic client registration allow attackers to register malicious clients that inherit trust from the registration endpoint. Combined with consent cookie reuse, attackers can obtain tokens for arbitrary scopes without user interaction.",
+    "remediation": "Disable dynamic client registration for production MCP servers. Use pre-registered client IDs with strict redirect URI validation. Implement per-client consent tracking that does not rely on cookies alone.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-129",
+    "name": "MCP Preference Manipulation Attack (MPMA/DPMA)",
+    "match_patterns": {
+      "args_contains": ["--priority=critical", "--trust-level=verified", "--endorsed-by=", "--certified-by="]
+    },
+    "severity": "high",
+    "description": "MCP Preference Manipulation Attacks embed persuasive language, fake credentials, and urgency triggers in tool metadata to manipulate how AI agents rank and select tools. Direct PMA (DPMA) inserts phrases like 'officially endorsed' or 'certified secure' into tool names and descriptions to bias agent tool selection toward the malicious server.",
+    "remediation": "Ignore trust claims in tool metadata. Implement server-side tool ranking that does not rely on self-reported metadata. Use allowlists for trusted MCP servers. Strip marketing language from tool descriptions before passing to the LLM.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-130",
+    "name": "Supply Chain -- SANDWORM_MODE IDE config injection targets",
+    "match_patterns": {
+      "commands": ["npx", "npm"],
+      "args_contains": ["@aspect-build/", "@aspect_build/", "bsm-", "dev-tool-", "ts-toolbelt-", "npm-check-util"]
+    },
+    "severity": "critical",
+    "description": "Specific typosquatting packages from the SANDWORM_MODE campaign that inject malicious MCP server entries into IDE configuration files (~/.cursor/mcp.json, claude_desktop_config.json, etc.). The injected servers exfiltrate source code, environment variables, and SSH keys.",
+    "reference": "https://blog.socket.dev/sandworm-mode-mcp-injection-campaign",
+    "remediation": "Audit IDE MCP configuration files for unauthorized entries. Remove any packages matching SANDWORM_MODE indicators. Run mcp-scan --watch to detect configuration drift.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-131",
+    "name": "MCP server with CRM/customer data access",
+    "match_patterns": {
+      "server_names": ["salesforce-mcp", "hubspot-mcp", "zendesk-mcp", "intercom-mcp", "freshdesk-mcp", "crm-mcp"],
+      "args_contains": ["salesforce-mcp", "hubspot-mcp", "zendesk-mcp", "intercom-mcp", "freshdesk-mcp"]
+    },
+    "severity": "high",
+    "description": "MCP server with access to CRM platforms containing customer PII, deal information, and support tickets. Prompt injection can manipulate the agent into exfiltrating customer records, modifying deal stages, or injecting malicious content into support ticket responses.",
+    "remediation": "Use read-only API credentials for MCP CRM integrations. Restrict access to specific record types and fields. Implement PII redaction filters. Require human approval for any CRM write operations.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-132",
+    "name": "MCP server with document signing access",
+    "match_patterns": {
+      "server_names": ["docusign-mcp", "hellosign-mcp", "pandadoc-mcp", "signing-mcp"],
+      "args_contains": ["docusign-mcp", "hellosign-mcp", "pandadoc-mcp"]
+    },
+    "severity": "critical",
+    "description": "MCP server with access to electronic signature platforms. Prompt injection can manipulate the agent into creating fraudulent signature requests, modifying document contents before signing, or exfiltrating signed documents containing confidential business agreements.",
+    "remediation": "Never grant document creation or modification permissions to MCP servers. Use read-only access for document status checks. Require multi-factor authentication for all signing operations. Audit all signature requests.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-133",
+    "name": "MCP MCPTox benchmark evasion via description splitting",
+    "match_patterns": {
+      "args_contains": ["--split-description", "--multi-field-desc", "--desc-continuation"]
+    },
+    "severity": "high",
+    "description": "Evasion technique where malicious instructions are split across multiple schema fields (description, title, examples, default values) so that no single field triggers detection. When concatenated by the LLM, the fragments form a complete attack payload. The MCPTox benchmark found 84.2% of such split payloads bypass single-field scanning.",
+    "remediation": "Scan all schema fields holistically, not in isolation. Use Full-Schema Poisoning (FSP) analysis. Implement cross-field correlation to detect split payloads. Set maximum description length limits.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-134",
+    "name": "MCP server path traversal via symlink following",
+    "match_patterns": {
+      "args_contains": ["--follow-symlinks", "--allow-symlinks", "--dereference-links", "--no-symlink-check"]
+    },
+    "severity": "critical",
+    "description": "82% of surveyed MCP implementations with file operations are vulnerable to path traversal via symlink following. Attackers create symlinks pointing outside allowed directories, enabling read/write access to arbitrary filesystem paths including /etc/shadow, SSH keys, and application credentials.",
+    "remediation": "Disable symlink following in filesystem MCP servers. Resolve and validate canonical paths before file operations. Implement chroot or mount namespace isolation. Use the latest patched versions of filesystem servers.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-135",
+    "name": "MCP server with CI secret exfiltration via workflow inputs",
+    "match_patterns": {
+      "args_contains": ["--workflow-inputs", "--dispatch-inputs", "--ci-secrets-access"]
+    },
+    "severity": "critical",
+    "description": "MCP servers that trigger CI/CD workflow_dispatch events with attacker-controlled inputs. Prompt injection crafts workflow inputs that reference CI secrets (e.g., ${{ secrets.DEPLOY_KEY }}) in log output, exfiltrating credentials via build logs accessible to the MCP server.",
+    "remediation": "Never expose CI secrets in workflow logs. Use OIDC tokens instead of long-lived secrets. Restrict workflow_dispatch inputs to validated enums. Require approval gates for externally-triggered workflows.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-136",
+    "name": "MCP server with Notion/Confluence wiki write access",
+    "match_patterns": {
+      "server_names": ["notion-mcp", "confluence-mcp", "wiki-mcp", "coda-mcp"],
+      "args_contains": ["notion-mcp", "confluence-mcp", "wiki-mcp", "coda-mcp"]
+    },
+    "severity": "medium",
+    "description": "MCP server with write access to wiki and knowledge management platforms. Prompt injection can manipulate the agent into modifying documentation with misleading security guidance, injecting phishing links into shared pages, or exfiltrating proprietary knowledge base content.",
+    "remediation": "Use read-only API tokens for MCP wiki integrations. Implement page-level access restrictions. Require human approval for page edits. Monitor for bulk page reads indicating knowledge exfiltration.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-137",
+    "name": "MCP Figma-MCP command injection (CVE-2025-53967) expanded variants",
+    "match_patterns": {
+      "commands": ["npx"],
+      "args_contains": ["figma-mcp@0.", "figma-mcp@1.0", "figma-mcp@1.1", "@anthropic/figma-mcp@0."]
+    },
+    "severity": "critical",
+    "description": "Expanded command injection variants in Figma MCP server affecting 600,000+ downloads. Beyond the original CVE-2025-53967, additional injection points discovered in image export, component search, and comment tools where user-controlled Figma layer names are passed unsanitized to shell commands.",
+    "cve": "CVE-2025-53967",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2025-53967",
+    "remediation": "Update Figma MCP server to the latest patched version (2.0+). Validate and sanitize all Figma API responses before shell execution. Use argument arrays instead of command string concatenation.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-138",
+    "name": "MCP server with cloud function deployment access",
+    "match_patterns": {
+      "server_names": ["lambda-mcp", "cloud-functions-mcp", "azure-functions-mcp", "serverless-mcp", "vercel-functions-mcp"],
+      "args_contains": ["lambda-mcp", "cloud-functions-mcp", "azure-functions-mcp", "serverless-mcp"]
+    },
+    "severity": "critical",
+    "description": "MCP server with access to deploy serverless functions (AWS Lambda, Google Cloud Functions, Azure Functions). Prompt injection can deploy attacker-controlled code that executes with the function's IAM role, enabling persistent backdoors, data exfiltration, and lateral movement within cloud environments.",
+    "remediation": "Never grant function deployment permissions to MCP servers. Use read-only credentials for function status monitoring. Implement deployment approval gates. Use infrastructure-as-code with version control for all function deployments.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-139",
+    "name": "Supply Chain -- Postmark MCP original incident (v1.0.16 BCC exfil)",
+    "match_patterns": {
+      "commands": ["npx"],
+      "args_contains": ["postmark-mcp@1.0.16", "postmark-mcp@1.0.15", "postmark-mcp@1.0.14"]
+    },
+    "severity": "critical",
+    "description": "First known malicious MCP server in the wild (September 2025). The postmark-mcp npm package v1.0.16 added a single line BCC'ing every outgoing email to an attacker-controlled address (phan@giftshop.club). Approximately 300 organizations compromised, exposing 3,000-15,000 emails per day including password resets, invoices, and internal correspondence.",
+    "reference": "https://blog.invariantlabs.ai/postmark-mcp-attack-analysis",
+    "remediation": "Remove postmark-mcp versions prior to 2.0.0. Audit outbound email logs for unauthorized BCC recipients. Rotate any credentials sent via email. Only use the official Postmark MCP server from verified publishers.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-140",
+    "name": "MCP server with Snowflake/BigQuery data warehouse access",
+    "match_patterns": {
+      "server_names": ["snowflake-mcp", "bigquery-mcp", "redshift-mcp", "databricks-mcp", "warehouse-mcp"],
+      "args_contains": ["snowflake-mcp", "bigquery-mcp", "redshift-mcp", "databricks-mcp"]
+    },
+    "severity": "high",
+    "description": "MCP server with access to data warehouses containing business-critical analytics data. Prompt injection can exfiltrate customer records, financial data, and proprietary metrics via crafted SQL queries. Data warehouses often contain denormalized PII aggregated from multiple source systems.",
+    "remediation": "Use read-only credentials with row-level security. Restrict to specific schemas and tables. Implement query result size limits. Use data masking policies for PII columns. Monitor for bulk data export patterns.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-141",
+    "name": "MCP OAuth token theft via redirect URI manipulation",
+    "match_patterns": {
+      "args_contains": ["--redirect-uri=http://", "--callback-url=http://", "--oauth-redirect=http://"]
+    },
+    "severity": "critical",
+    "description": "MCP server OAuth flow configured with HTTP (non-HTTPS) redirect URIs or wildcard redirect patterns. Attackers intercept authorization codes by exploiting open redirects, subdomain takeover, or network-level MITM on the non-TLS callback endpoint.",
+    "remediation": "Use HTTPS redirect URIs exclusively. Register exact redirect URIs (no wildcards). Implement PKCE with S256 challenge method. Validate the redirect_uri parameter on both authorization and token endpoints.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-142",
+    "name": "MCP server with Jira/Linear project management write access",
+    "match_patterns": {
+      "server_names": ["jira-mcp", "linear-mcp", "asana-mcp", "trello-mcp", "monday-mcp", "project-mcp"],
+      "args_contains": ["jira-mcp", "linear-mcp", "asana-mcp", "trello-mcp"]
+    },
+    "severity": "medium",
+    "description": "MCP server with write access to project management platforms. Prompt injection can create misleading issues, modify sprint priorities, assign tasks to exfiltrate workflow information, or inject malicious links into issue descriptions that other team members click.",
+    "remediation": "Use read-only API tokens for MCP project management integrations. Restrict to specific projects and issue types. Require human approval for issue creation and modification.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-143",
+    "name": "MCP server environment variable injection via args passthrough",
+    "match_patterns": {
+      "args_contains": ["--env-passthrough=*", "--inherit-env", "--pass-all-env", "--env=*"]
+    },
+    "severity": "critical",
+    "description": "MCP server configured to inherit or passthrough all environment variables from the host process. This exposes every secret, API key, and credential in the parent environment to the MCP server process, including variables not explicitly needed by the server.",
+    "remediation": "Use explicit environment variable allowlists. Only pass the specific variables each MCP server requires. Never use wildcard env passthrough. Prefer credential managers over environment variables.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-144",
+    "name": "MCP server with image generation and steganographic exfil",
+    "match_patterns": {
+      "server_names": ["dall-e-mcp", "midjourney-mcp", "stable-diffusion-mcp", "image-gen-mcp", "flux-mcp"],
+      "args_contains": ["dall-e-mcp", "midjourney-mcp", "stable-diffusion-mcp", "image-gen-mcp"]
+    },
+    "severity": "medium",
+    "description": "MCP server with image generation capabilities can be exploited for steganographic data exfiltration. Prompt injection encodes stolen credentials or sensitive data into image generation parameters, embedding secrets in image metadata, pixel data, or generation prompts that are sent to external services.",
+    "remediation": "Sanitize all image generation prompts for embedded data patterns. Strip metadata from generated images. Monitor for suspicious generation parameters. Restrict image generation to approved use cases.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-145",
+    "name": "MCP server with network scanning/reconnaissance tools",
+    "match_patterns": {
+      "server_names": ["nmap-mcp", "shodan-mcp", "censys-mcp", "recon-mcp", "network-scan-mcp", "portscan-mcp"],
+      "args_contains": ["nmap-mcp", "shodan-mcp", "censys-mcp", "recon-mcp", "network-scan-mcp"]
+    },
+    "severity": "high",
+    "description": "MCP server with network scanning and reconnaissance capabilities. Prompt injection can perform unauthorized network scans, enumerate internal services, discover vulnerable hosts, and map network topology to facilitate lateral movement or targeted attacks against internal infrastructure.",
+    "remediation": "Restrict network scanning MCP servers to approved target ranges. Require explicit authorization for each scan. Implement rate limiting and scan scope controls. Log all scan activities for audit.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-146",
+    "name": "MCP server with package registry publish access",
+    "match_patterns": {
+      "server_names": ["npm-publish-mcp", "pypi-publish-mcp", "cargo-publish-mcp", "registry-publish-mcp"],
+      "args_contains": ["npm-publish-mcp", "pypi-publish-mcp", "cargo-publish-mcp", "--publish-access"]
+    },
+    "severity": "critical",
+    "description": "MCP server with credentials to publish packages to npm, PyPI, crates.io, or other package registries. Prompt injection can publish backdoored package versions, enabling supply chain attacks that propagate to all downstream consumers of the compromised package.",
+    "remediation": "Never grant publish credentials to MCP servers. Use CI/CD pipelines with human approval gates for package publishing. Implement package signing and provenance attestation. Use scoped tokens with minimal permissions.",
+    "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-147",
+    "name": "MCP Vulnerable server path traversal (82% prevalence)",
+    "match_patterns": {
+      "args_contains": ["--allow-path-traversal", "--no-path-validation", "--unrestricted-paths", "--allow-dotdot"]
+    },
+    "severity": "critical",
+    "description": "82% of 2,614 surveyed MCP server implementations with file operations are vulnerable to path traversal attacks. Attackers use ../ sequences, URL encoding (%2e%2e%2f), and double encoding to escape configured directory boundaries and access arbitrary files on the host system.",
+    "reference": "https://vulnerablemcp.info/statistics",
+    "remediation": "Canonicalize and validate all file paths before access. Reject paths containing .. after canonicalization. Use chroot or filesystem namespace isolation. Update to latest versions of all filesystem MCP servers.",
+    "added_at": "2026-04-05"
   }
 ]

@@ -755,6 +755,138 @@ describe('analyzeKnownThreats', () => {
     expect(findings.length).toBeGreaterThan(0)
     expect(findings.some((f) => f.description.includes('Overthinking') || f.description.includes('cyclic') || f.description.includes('token'))).toBe(true)
   })
+
+  it('detects MCP TypeScript SDK DNS rebinding (CVE-2025-66414)', () => {
+    const server: MCPServer = {
+      name: 'old-sdk',
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/sdk@1.1.0'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('CVE-2025-66414') || f.description.includes('DNS rebinding'))).toBe(true)
+  })
+
+  it('detects FastMCP OAuthProxy confused deputy (CVE-2026-27124)', () => {
+    const server: MCPServer = {
+      name: 'fastmcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('CVE-2026-27124') || f.description.includes('FastMCP'))).toBe(true)
+  })
+
+  it('detects SANDWORM_MODE campaign packages', () => {
+    const server: MCPServer = {
+      name: 'dev-tool',
+      command: 'npx',
+      args: ['-y', 'sandworm-utils'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('SANDWORM_MODE') || f.description.includes('typosquatting'))).toBe(true)
+  })
+
+  it('detects compromised Axios versions', () => {
+    const server: MCPServer = {
+      name: 'http-tools',
+      command: 'npx',
+      args: ['-y', 'axios@1.7.8'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('Axios') || f.description.includes('Sapphire Sleet'))).toBe(true)
+  })
+
+  it('detects MCP server with CRM access', () => {
+    const server: MCPServer = {
+      name: 'salesforce-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('CRM') || f.description.includes('customer'))).toBe(true)
+  })
+
+  it('detects env passthrough wildcard in args', () => {
+    const server: MCPServer = {
+      name: 'leaky',
+      command: 'node',
+      args: ['server.js', '--env-passthrough=*'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('environment variable') || f.description.includes('passthrough'))).toBe(true)
+  })
+
+  it('detects MCP server with cloud function deployment access', () => {
+    const server: MCPServer = {
+      name: 'lambda-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('serverless') || f.description.includes('Lambda') || f.description.includes('deploy'))).toBe(true)
+  })
+
+  it('detects MCP server with package registry publish access', () => {
+    const server: MCPServer = {
+      name: 'npm-publish-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('publish') || f.description.includes('supply chain'))).toBe(true)
+  })
+
+  it('detects OAuth redirect URI manipulation', () => {
+    const server: MCPServer = {
+      name: 'oauth-server',
+      command: 'node',
+      args: ['server.js', '--redirect-uri=http://example.com/callback'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('OAuth') || f.description.includes('redirect'))).toBe(true)
+  })
+
+  it('detects whitespace hiding attack servers', () => {
+    const server: MCPServer = {
+      name: 'random-facts-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('whitespace') || f.description.includes('hiding'))).toBe(true)
+  })
+
+  it('detects path traversal permissive configuration', () => {
+    const server: MCPServer = {
+      name: 'files',
+      command: 'node',
+      args: ['server.js', '--no-path-validation'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('path traversal') || f.description.includes('Path traversal'))).toBe(true)
+  })
 })
 
 describe('getKnownThreatCount', () => {
@@ -762,8 +894,8 @@ describe('getKnownThreatCount', () => {
     expect(getKnownThreatCount()).toBeGreaterThan(0)
   })
 
-  it('returns at least 121 threats (current database size)', () => {
-    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(121)
+  it('returns at least 147 threats (current database size)', () => {
+    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(147)
   })
 
   it('returns a consistent count', () => {

@@ -38,6 +38,22 @@ const UNICODE_HIDDEN_PATTERNS: Array<{ pattern: RegExp; description: string }> =
     pattern: /[\u2066-\u2069\u202A-\u202E]/,
     description: 'Bidirectional text override characters in tool description (can reorder visible text)',
   },
+  {
+    pattern: /\u{E0001}|[\u{E0020}-\u{E007F}]/u,
+    description: 'Unicode Tag characters in tool description (deprecated language tags used to encode hidden data)',
+  },
+  {
+    pattern: /[\u2800-\u28FF]/,
+    description: 'Braille pattern characters used to create invisible text blocks in tool description',
+  },
+  {
+    pattern: /[\u3164\uFFA0]/,
+    description: 'Hangul filler characters creating invisible content in tool description',
+  },
+  {
+    pattern: /\s{50,}/,
+    description: 'Excessive whitespace in tool description (may hide instructions after horizontal scroll boundary)',
+  },
 ]
 
 /**
@@ -198,6 +214,36 @@ const HIDDEN_INSTRUCTION_PATTERNS: Array<{ pattern: RegExp; description: string;
   {
     pattern: /(?:wrap|intercept|proxy|hook)\s+(?:the\s+)?(?:original|real|actual|underlying)\s+(?:tool|function|method|api)/i,
     description: 'Tool interception pattern: wraps or proxies legitimate tool calls to intercept and exfiltrate data in transit',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:officially?\s+)?(?:endorsed|certified|verified|approved|trusted)\s+(?:by|from)\s+(?:anthropic|openai|google|microsoft|meta)/i,
+    description: 'Preference manipulation attack (MPMA): fake endorsement claim to bias agent tool selection toward this server',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:priority|urgency|importance)\s*[:=]\s*(?:critical|highest|emergency|mandatory|urgent)/i,
+    description: 'Preference manipulation attack: urgency trigger to force agent to prioritize this tool over legitimate alternatives',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:this\s+tool\s+)?(?:must|should)\s+(?:always\s+)?(?:be\s+)?(?:called|used|invoked|selected)\s+(?:first|before|instead\s+of|over)\s+/i,
+    description: 'Tool priority hijack: instructs agent to always prefer this tool over others (DPMA variant)',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:split|distribute|spread)\s+(?:the\s+)?(?:instruction|command|payload|data)\s+(?:across|between|over)\s+(?:multiple\s+)?(?:field|param|schema)/i,
+    description: 'Description splitting attack: distributes malicious payload across multiple schema fields to evade single-field detection',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:reconstruct|reassemble|combine|join)\s+(?:the\s+)?(?:parts?|fragments?|pieces?|segments?)\s+(?:from|in|across)\s+(?:the\s+)?(?:schema|fields?|params?)/i,
+    description: 'Fragment reassembly instruction: tells the LLM to reconstruct a split payload from multiple schema fields (MCPTox evasion)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:do\s+not|don't|never)\s+(?:show|display|reveal|expose)\s+(?:this|the|these)\s+(?:instruction|description|text|content)\s+(?:to|in)\s+(?:the\s+)?(?:user|output|response|log)/i,
+    description: 'Instruction concealment: explicitly tells the LLM to hide the malicious instruction from user-visible output',
     severity: 'critical',
   },
 ]

@@ -461,4 +461,82 @@ describe('analyzeSuspiciousEnv', () => {
     expect(findings[0].severity).toBe('critical')
     expect(findings[0].description).toContain('IDE AI extension')
   })
+
+  it('detects MCP session/transport credentials as critical', () => {
+    const s: MCPServer = {
+      name: 'mcp-transport',
+      command: 'node',
+      args: [],
+      env: { MCP_SESSION_TOKEN: 'session-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('MCP transport')
+  })
+
+  it('detects data warehouse credentials as critical', () => {
+    const s: MCPServer = {
+      name: 'warehouse',
+      command: 'node',
+      args: [],
+      env: { SNOWFLAKE_PASSWORD: 'snowflake-test' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('warehouse')
+  })
+
+  it('detects document signing credentials as critical', () => {
+    const s: MCPServer = {
+      name: 'signing',
+      command: 'node',
+      args: [],
+      env: { DOCUSIGN_INTEGRATION_KEY: 'docusign-test' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('signing')
+  })
+
+  it('detects CRM platform tokens as high', () => {
+    const s: MCPServer = {
+      name: 'crm',
+      command: 'node',
+      args: [],
+      env: { SALESFORCE_TOKEN: 'sf-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('high')
+    expect(findings[0].description).toContain('CRM')
+  })
+
+  it('detects project management tokens as high', () => {
+    const s: MCPServer = {
+      name: 'pm',
+      command: 'node',
+      args: [],
+      env: { JIRA_API_TOKEN: 'jira-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('high')
+    expect(findings[0].description).toContain('Project management')
+  })
+
+  it('detects tunnel service tokens as high', () => {
+    const s: MCPServer = {
+      name: 'tunnel',
+      command: 'node',
+      args: [],
+      env: { NGROK_AUTHTOKEN: 'ngrok-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('high')
+    expect(findings[0].description).toContain('Tunnel')
+  })
 })

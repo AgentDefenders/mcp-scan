@@ -278,6 +278,42 @@ const ENV_RULES: EnvRule[] = [
     severity: 'high',
     description: 'Code quality/security platform token exposed in MCP server environment -- enables tampering with security scan results',
   },
+  // Critical: additional AI agent and MCP credentials (2026 Q2)
+  {
+    pattern: /^(?:GROK_API_KEY|COHERE_API_KEY_V2|LLAMA_API_KEY|CLAUDE_SESSION_KEY|OPENROUTER_API_KEY)$/,
+    severity: 'critical',
+    description: 'AI/LLM provider API key passed directly to MCP server environment -- use credential managers or scoped tokens instead',
+  },
+  {
+    pattern: /^(?:MCP_SESSION_TOKEN|MCP_TRANSPORT_KEY|MCP_OAUTH_CLIENT_SECRET|MCP_SIGNING_KEY)$/,
+    severity: 'critical',
+    description: 'MCP transport or session credential exposed in environment -- enables session hijacking and unauthorized tool execution',
+  },
+  {
+    pattern: /^(?:SNOWFLAKE_PASSWORD|BIGQUERY_KEY|REDSHIFT_PASSWORD|DATABRICKS_TOKEN)$/,
+    severity: 'critical',
+    description: 'Data warehouse credentials exposed in MCP server environment -- enables unauthorized access to business-critical analytics data',
+  },
+  {
+    pattern: /^(?:DOCUSIGN_INTEGRATION_KEY|HELLOSIGN_API_KEY|PANDADOC_API_KEY)$/,
+    severity: 'critical',
+    description: 'Document signing platform credentials exposed in MCP server environment -- enables creation of fraudulent signature requests',
+  },
+  {
+    pattern: /^(?:JIRA_API_TOKEN|LINEAR_API_KEY|ASANA_TOKEN|TRELLO_API_KEY|NOTION_API_KEY)$/,
+    severity: 'high',
+    description: 'Project management/wiki platform token exposed in MCP server environment -- enables unauthorized data access and content modification',
+  },
+  {
+    pattern: /^(?:SALESFORCE_TOKEN|HUBSPOT_API_KEY|ZENDESK_TOKEN|INTERCOM_TOKEN)$/,
+    severity: 'high',
+    description: 'CRM platform credentials exposed in MCP server environment -- enables access to customer PII and business records',
+  },
+  {
+    pattern: /^(?:NGROK_AUTHTOKEN|CLOUDFLARED_TOKEN|LOCALTUNNEL_TOKEN)$/,
+    severity: 'high',
+    description: 'Tunnel service authentication token exposed in MCP server environment -- enables unauthorized exposure of local services to the internet',
+  },
 ]
 
 /**
