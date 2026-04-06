@@ -314,6 +314,47 @@ const ENV_RULES: EnvRule[] = [
     severity: 'high',
     description: 'Tunnel service authentication token exposed in MCP server environment -- enables unauthorized exposure of local services to the internet',
   },
+  // 2026-04 additions: cryptocurrency, A2A, additional AI agent tokens
+  {
+    pattern: /^(?:WALLET_PRIVATE_KEY|ETH_PRIVATE_KEY|SOLANA_PRIVATE_KEY|MNEMONIC_PHRASE|SEED_PHRASE|CRYPTO_PRIVATE_KEY)$/,
+    severity: 'critical',
+    description: 'Cryptocurrency wallet private key or seed phrase exposed in MCP server environment -- enables immediate and irreversible theft of funds',
+  },
+  {
+    pattern: /^(?:A2A_TOKEN|A2A_AUTH_KEY|AGENT_TO_AGENT_SECRET|A2A_API_KEY)$/,
+    severity: 'critical',
+    description: 'Agent-to-Agent (A2A) protocol credentials exposed in MCP server environment -- enables impersonation of trusted agents and cross-agent injection',
+  },
+  {
+    pattern: /^(?:LANGCHAIN_API_KEY|LANGSMITH_API_KEY|LANGGRAPH_API_KEY|CREWAI_API_KEY|AUTOGEN_TOKEN)$/,
+    severity: 'critical',
+    description: 'AI agent framework API key exposed in MCP server environment -- enables unauthorized access to agent orchestration platforms and trace data',
+  },
+  {
+    pattern: /^(?:TAVILY_API_KEY|SERPER_API_KEY|BRAVE_SEARCH_API_KEY|EXA_API_KEY|FIRECRAWL_API_KEY)$/,
+    severity: 'high',
+    description: 'AI search/scraping tool API key exposed in MCP server environment -- enables unauthorized web access and potential billing abuse',
+  },
+  {
+    pattern: /^(?:NEON_API_KEY|PLANETSCALE_TOKEN|TURSO_AUTH_TOKEN|XATA_API_KEY|UPSTASH_REDIS_TOKEN)$/,
+    severity: 'critical',
+    description: 'Serverless database credentials exposed in MCP server environment -- enables unauthorized data access and potential data destruction',
+  },
+  {
+    pattern: /^(?:RESEND_API_KEY|POSTMARK_SERVER_TOKEN|MAILGUN_API_KEY|SES_ACCESS_KEY)$/,
+    severity: 'high',
+    description: 'Email service credentials exposed in MCP server environment -- enables sending phishing emails and exfiltrating data via email (Postmark MCP incident pattern)',
+  },
+  {
+    pattern: /^(?:R2_ACCESS_KEY|BACKBLAZE_KEY|WASABI_ACCESS_KEY|MINIO_SECRET_KEY)$/,
+    severity: 'critical',
+    description: 'Object storage credentials exposed in MCP server environment -- enables unauthorized access to stored files and potential data exfiltration',
+  },
+  {
+    pattern: /^(?:MCP_INSPECTOR_PORT|MCP_INSPECTOR_HOST|MCP_DEBUG_PORT)$/,
+    severity: 'medium',
+    description: 'MCP Inspector/debug configuration exposed in MCP server environment -- may enable DNS rebinding or CSRF attacks against the inspector (CVE-2025-49596 pattern)',
+  },
 ]
 
 /**

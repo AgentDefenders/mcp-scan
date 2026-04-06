@@ -246,6 +246,42 @@ const HIDDEN_INSTRUCTION_PATTERNS: Array<{ pattern: RegExp; description: string;
     description: 'Instruction concealment: explicitly tells the LLM to hide the malicious instruction from user-visible output',
     severity: 'critical',
   },
+  // 2026-04 additions: OAuth hijack, output poisoning, worm propagation, annotation abuse
+  {
+    pattern: /(?:authorization_endpoint|token_endpoint|redirect_uri)\s*[:=]\s*https?:\/\//i,
+    description: 'Hardcoded OAuth endpoint in tool description (CVE-2025-6514 pattern): redirects authorization flow to attacker-controlled server',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:return|output|respond)\s+(?:with\s+)?(?:this\s+)?(?:exact|specific|following)\s+(?:json|text|string|payload|content)\s*[:=]/i,
+    description: 'Forced output content: instructs the tool to return attacker-specified content that poisons downstream LLM context',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:propagate|replicate|copy|spread)\s+(?:this\s+)?(?:instruction|description|payload|behavior)\s+(?:to|across|into)\s+(?:all|other|every)/i,
+    description: 'Worm propagation instruction: self-replicating payload that instructs the LLM to spread the injection across connected tools and servers',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:readOnlyHint|destructiveHint|idempotentHint|openWorldHint)\s*[:=]\s*(?:true|false)/i,
+    description: 'Tool annotation manipulation in description: attempts to override MCP tool annotations to bypass client safety checks',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:when|if)\s+(?:connected\s+to|running\s+with|alongside)\s+(?:more\s+than\s+\d+|multiple|other|several)\s+(?:server|tool|mcp)/i,
+    description: 'Multi-server conditional activation: malicious behavior triggers only when multiple servers are connected (cross-server attack prerequisite)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:exfiltrate|leak|send|transmit)\s+(?:the\s+)?(?:data|info|content|result)\s+(?:via|through|using|in)\s+(?:dns|subdomain|query\s+param|url\s+param|image\s+url)/i,
+    description: 'Covert exfiltration channel: uses DNS queries, URL parameters, or image URLs as side channels for data theft',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:BCC|bcc|blind\s+carbon\s+copy)\s*[:=]\s*\S+@/i,
+    description: 'BCC exfiltration in tool description: hardcoded BCC address for email data theft (Postmark MCP supply chain pattern)',
+    severity: 'critical',
+  },
 ]
 
 /**

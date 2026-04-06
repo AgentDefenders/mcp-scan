@@ -264,6 +264,72 @@ const PROMPT_INJECTION_PATTERNS: Array<{ pattern: RegExp; description: string; s
     description: 'DNS rebinding instruction: attempts to exploit DNS rebinding to access localhost-bound MCP servers from external origins',
     severity: 'critical',
   },
+  // 2026-04 additions: OAuth, sampling, elicitation, annotation spoofing, resource injection, cross-server
+  {
+    pattern: /(?:redirect|set|change|override)\s+(?:the\s+)?(?:oauth|authorization|auth)\s+(?:endpoint|url|callback|redirect_uri)\s+(?:to|=)\s+/i,
+    description: 'OAuth endpoint redirection: attempts to redirect OAuth flow to attacker-controlled endpoint for token theft (CVE-2025-6514 pattern)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:register|create|add)\s+(?:a\s+)?(?:dynamic|new)\s+(?:oauth\s+)?client\s+(?:with|using|via)\s+/i,
+    description: 'Dynamic OAuth client registration exploitation: registers rogue OAuth clients to intercept authorization flows',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:use|abuse|exploit)\s+(?:the\s+)?(?:elicitation|elicit|user[\s_-]?prompt)\s+(?:to|for|and)\s+(?:ask|request|extract|collect)/i,
+    description: 'MCP Elicitation API abuse: uses the elicitation feature to social-engineer users into revealing credentials or approving dangerous actions',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:mark|set|declare|annotate)\s+(?:this\s+)?(?:tool|function)\s+(?:as\s+)?(?:read[\s_-]?only|non[\s_-]?destructive|safe|idempotent)/i,
+    description: 'Tool annotation spoofing: falsely marks a destructive tool as safe/read-only to bypass client safety checks',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:access|read|fetch|load)\s+(?:the\s+)?(?:resource|uri|template)\s+(?:at|from|via)\s+(?:file:\/\/|https?:\/\/169\.254|https?:\/\/localhost|https?:\/\/127\.)/i,
+    description: 'MCP resource template SSRF: accesses local/metadata resources via MCP resource URI templates to steal credentials or reach internal services',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:read|access|exfiltrate|steal|harvest)\s+(?:data|tokens?|credentials?|secrets?|keys?)\s+(?:from|via|through)\s+(?:the\s+)?(?:other|connected|co[\s-]?connected|adjacent)\s+(?:server|mcp|tool)/i,
+    description: 'Cross-server data exfiltration: attempts to harvest credentials or data from co-connected MCP servers through shared agent context',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:inject|embed|insert|plant)\s+(?:instructions?|prompts?|commands?|payloads?)\s+(?:into|in|within)\s+(?:the\s+)?(?:output|response|result|return\s+value|tool\s+result)/i,
+    description: 'Tool output poisoning (CyberArk pattern): embeds malicious instructions in tool return values to poison downstream LLM reasoning',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:clone|replicate|spread|propagate)\s+(?:this\s+)?(?:instruction|payload|prompt|code)\s+(?:to|into|across)\s+(?:other|all|every|connected)\s+(?:server|tool|agent|mcp)/i,
+    description: 'Agentic worm propagation: instructs the agent to spread malicious payloads to all connected MCP servers (self-replicating attack)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:open|launch|start|execute)\s+(?:a\s+)?(?:reverse\s+shell|bind\s+shell|netcat|nc\s+-[el]|socat)\s+/i,
+    description: 'Reverse/bind shell execution: attempts to establish interactive shell access for remote control of the host system',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:mount|access|read)\s+(?:the\s+)?(?:\/var\/run\/docker\.sock|docker[\s._-]?socket|\/run\/containerd)/i,
+    description: 'Container runtime socket access: attempts to access Docker/containerd socket for container escape and host compromise',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:sign|approve|authorize|confirm)\s+(?:the\s+)?(?:transaction|transfer|payment|withdrawal|swap)\s+(?:to|for|of)\s+/i,
+    description: 'Cryptocurrency transaction authorization: attempts to get the agent to sign financial transactions or token transfers',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:modify|edit|update|change)\s+(?:the\s+)?(?:pipeline|workflow|build|deploy|release)\s+(?:config|script|file|definition|yaml|yml)/i,
+    description: 'CI/CD pipeline modification: attempts to alter build/deploy configurations for supply chain compromise',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:update|modify|change|add|delete)\s+(?:the\s+)?(?:dns|domain|cname|a[\s_-]?record|mx[\s_-]?record|nameserver)/i,
+    description: 'DNS record manipulation: attempts to modify DNS records for domain takeover or traffic interception',
+    severity: 'critical',
+  },
 ]
 
 /**

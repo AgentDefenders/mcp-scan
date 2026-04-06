@@ -539,4 +539,109 @@ describe('analyzeSuspiciousEnv', () => {
     expect(findings[0].severity).toBe('high')
     expect(findings[0].description).toContain('Tunnel')
   })
+
+  // 2026-04 additions
+  it('detects cryptocurrency wallet private keys as critical', () => {
+    const s: MCPServer = {
+      name: 'crypto-server',
+      command: 'node',
+      args: [],
+      env: { WALLET_PRIVATE_KEY: '0xdeadbeef' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('Cryptocurrency')
+  })
+
+  it('detects A2A protocol credentials as critical', () => {
+    const s: MCPServer = {
+      name: 'a2a-server',
+      command: 'node',
+      args: [],
+      env: { A2A_TOKEN: 'a2a-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('Agent-to-Agent')
+  })
+
+  it('detects AI agent framework API keys as critical', () => {
+    const s: MCPServer = {
+      name: 'langchain-server',
+      command: 'node',
+      args: [],
+      env: { LANGCHAIN_API_KEY: 'lc-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('agent framework')
+  })
+
+  it('detects serverless database credentials as critical', () => {
+    const s: MCPServer = {
+      name: 'neon-server',
+      command: 'node',
+      args: [],
+      env: { NEON_API_KEY: 'neon-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('Serverless database')
+  })
+
+  it('detects email service credentials as high', () => {
+    const s: MCPServer = {
+      name: 'email-server',
+      command: 'node',
+      args: [],
+      env: { POSTMARK_SERVER_TOKEN: 'pm-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('high')
+    expect(findings[0].description).toContain('Email service')
+  })
+
+  it('detects object storage credentials as critical', () => {
+    const s: MCPServer = {
+      name: 'storage-server',
+      command: 'node',
+      args: [],
+      env: { R2_ACCESS_KEY: 'r2-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('Object storage')
+  })
+
+  it('detects AI search tool API keys as high', () => {
+    const s: MCPServer = {
+      name: 'search-server',
+      command: 'node',
+      args: [],
+      env: { TAVILY_API_KEY: 'tvly-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('high')
+    expect(findings[0].description).toContain('search/scraping')
+  })
+
+  it('detects MCP Inspector debug config as medium', () => {
+    const s: MCPServer = {
+      name: 'debug-server',
+      command: 'node',
+      args: [],
+      env: { MCP_INSPECTOR_PORT: '9229' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('medium')
+    expect(findings[0].description).toContain('Inspector')
+  })
 })

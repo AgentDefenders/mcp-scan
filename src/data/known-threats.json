@@ -1763,5 +1763,337 @@
     "reference": "https://vulnerablemcp.info/statistics",
     "remediation": "Canonicalize and validate all file paths before access. Reject paths containing .. after canonicalization. Use chroot or filesystem namespace isolation. Update to latest versions of all filesystem MCP servers.",
     "added_at": "2026-04-05"
+  },
+  {
+    "id": "THREAT-148",
+    "name": "mcp-remote OAuth RCE via unvalidated authorization endpoint",
+    "match_patterns": {
+      "commands": ["npx"],
+      "args_contains": ["mcp-remote"]
+    },
+    "severity": "critical",
+    "description": "The mcp-remote npm package (437,000+ downloads) trusts server-provided OAuth authorization_endpoint without validation and passes it directly to the system shell via open(). Attackers craft malicious authorization URLs that achieve remote code execution on the client machine.",
+    "cve": "CVE-2025-6514",
+    "reference": "https://jfrog.com/blog/2025-6514-critical-mcp-remote-rce-vulnerability/",
+    "remediation": "Update mcp-remote to the latest patched version. Validate all OAuth endpoints against an allowlist before opening. Never pass server-provided URLs directly to system shell commands.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-149",
+    "name": "Anthropic MCP Inspector DNS rebinding RCE",
+    "match_patterns": {
+      "commands": ["npx"],
+      "args_contains": ["@anthropic/mcp-inspector", "@modelcontextprotocol/inspector"]
+    },
+    "severity": "critical",
+    "description": "The MCP Inspector tool is vulnerable to DNS rebinding and CSRF attacks. Attackers send malicious HTTP requests from public web pages to the localhost MCP Inspector instance, achieving remote code execution without user interaction.",
+    "cve": "CVE-2025-49596",
+    "reference": "https://www.recordedfuture.com/blog/anthropic-mcp-inspector-cve-2025-49596",
+    "remediation": "Update MCP Inspector to the latest version. Bind the inspector to 127.0.0.1 only. Enable CORS restrictions and CSRF token validation.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-150",
+    "name": "Anthropic mcp-server-git unrestricted git_init",
+    "match_patterns": {
+      "commands": ["npx"],
+      "args_contains": ["@anthropic/mcp-server-git", "@modelcontextprotocol/server-git"]
+    },
+    "severity": "high",
+    "description": "The Anthropic git MCP server allows git_init on arbitrary directories including sensitive locations like ~/.ssh, turning them into git repositories. Combined with CVE-2025-68144 (argument injection in git_diff) and CVE-2025-68145 (path validation bypass), this enables a full RCE chain via malicious .git/config hooks.",
+    "cve": "CVE-2025-68143",
+    "reference": "https://thehackernews.com/2026/01/three-flaws-in-anthropic-mcp-git-server.html",
+    "remediation": "Update to the latest version of the git MCP server. The git_init tool has been removed entirely in the fix. Restrict the server to specific repository directories.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-151",
+    "name": "Claude Code project file exploitation (CLAUDE.md / .mcp.json)",
+    "match_patterns": {
+      "server_names": ["claude-code-exploit", "claude-project-inject"],
+      "args_contains": ["--trust-project-files", "--no-verify-project"]
+    },
+    "severity": "critical",
+    "description": "Malicious CLAUDE.md or .mcp.json files planted in cloned repositories can achieve RCE and API token exfiltration when the project is opened in Claude Code. The project configuration files are automatically loaded and can register malicious MCP servers or inject harmful instructions.",
+    "cve": "CVE-2025-59536",
+    "reference": "https://research.checkpoint.com/2026/rce-and-api-token-exfiltration-through-claude-code-project-files-cve-2025-59536/",
+    "remediation": "Never open untrusted repositories in Claude Code without reviewing CLAUDE.md and .mcp.json first. Enable project file verification. Update Claude Code to the latest version with sandboxed project config loading.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-152",
+    "name": "Postmark MCP supply chain backdoor (BCC exfiltration)",
+    "match_patterns": {
+      "commands": ["npx"],
+      "server_names": ["postmark-mcp", "postmark-email-mcp"],
+      "args_contains": ["postmark-mcp"]
+    },
+    "severity": "critical",
+    "description": "First confirmed real-world MCP supply chain compromise (September 2025). The backdoored postmark-mcp npm package silently added a BCC to every outgoing email, forwarding copies to an attacker-controlled domain. CISA issued an alert about this incident.",
+    "reference": "https://www.cisa.gov/news-events/alerts/2025/09/23/widespread-supply-chain-compromise-impacting-npm-ecosystem",
+    "remediation": "Remove the compromised package immediately. Verify package integrity against known-good checksums. Audit all sent emails for unauthorized BCC recipients. Rotate all credentials accessible to the MCP server.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-153",
+    "name": "WhatsApp MCP cross-server data exfiltration",
+    "match_patterns": {
+      "server_names": ["whatsapp-mcp", "wa-mcp", "whatsapp-bridge-mcp"],
+      "args_contains": ["whatsapp-mcp", "wa-mcp"]
+    },
+    "severity": "critical",
+    "description": "Demonstrated by Invariant Labs (April 2025): a malicious MCP server exploits cross-server context sharing to silently exfiltrate a user's entire WhatsApp message history through a co-connected whatsapp-mcp server. Messages are sent to an attacker-controlled phone number disguised as ordinary outbound messages, bypassing DLP tooling.",
+    "reference": "https://rafter.so/blog/mcp-whatsapp-exfiltration-case-study",
+    "remediation": "Isolate messaging MCP servers from other connected servers. Use read-only mode for messaging integrations. Implement outbound message rate limiting and recipient allowlisting.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-154",
+    "name": "TeamPCP cascading AI toolchain supply chain attack",
+    "match_patterns": {
+      "commands": ["npx", "pip", "pip3"],
+      "args_contains": ["litellm-mcp", "telnyx-mcp", "trivy-mcp"]
+    },
+    "severity": "critical",
+    "description": "TeamPCP campaign (March 2026): cascading supply chain attack targeting the AI/ML developer toolchain. Compromises Trivy to steal CI/CD credentials, propagates an npm worm, then backdoors LiteLLM (unified gateway to 100+ LLM APIs) and Telnyx SDK to harvest API keys for every major commercial LLM provider.",
+    "reference": "https://labs.cloudsecurityalliance.org/research/csa-research-note-teampcp-supply-chain-ai-tooling-20260330-c/",
+    "remediation": "Pin all AI/ML dependencies to verified versions. Use lockfiles with integrity hashes. Audit CI/CD credential access. Rotate all LLM API keys if compromise suspected.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-155",
+    "name": "MCP server with OAuth proxy trust exploitation",
+    "match_patterns": {
+      "args_contains": ["--oauth-proxy", "--auth-proxy", "--oauth-endpoint", "--authorization-endpoint"]
+    },
+    "severity": "critical",
+    "description": "MCP servers exploiting OAuth proxy trust relationships by providing malicious authorization endpoints. Static client IDs, dynamic client registration, and consent cookies create confused deputy vulnerabilities enabling session hijacking and token theft.",
+    "remediation": "Validate all OAuth endpoints against a hardcoded allowlist. Never trust server-provided authorization URLs. Use PKCE flow with per-session state parameters. Reject dynamic client registration from untrusted servers.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-156",
+    "name": "MCP Sampling API prompt injection via server-initiated completions",
+    "match_patterns": {
+      "server_names": ["sampling-exploit-mcp", "sampling-inject-mcp"],
+      "args_contains": ["--enable-sampling", "--sampling-mode=unrestricted"]
+    },
+    "severity": "critical",
+    "description": "Documented by Palo Alto Unit42: malicious MCP servers exploit the sampling feature (server-initiated LLM completions through the client) to influence model behavior invisibly. The server hijacks the agent's reasoning process by injecting prompts through the sampling API, enabling actions that bypass user-visible tool approval.",
+    "reference": "https://unit42.paloaltonetworks.com/model-context-protocol-attack-vectors/",
+    "remediation": "Disable sampling capability for untrusted MCP servers. Require explicit user approval for each sampling request. Log all sampling interactions. Implement content filtering on sampling responses.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-157",
+    "name": "Cross-server context poisoning via shared agent context",
+    "match_patterns": {
+      "args_contains": ["--shared-context", "--context-bridge", "--cross-server-context"]
+    },
+    "severity": "high",
+    "description": "Academic analysis of 67,057 MCP servers found that untrusted servers can exfiltrate data from co-connected trusted servers through the shared agent context. When multiple MCP servers connect to the same agent, a malicious server reads and manipulates data flowing through other servers.",
+    "remediation": "Isolate MCP server contexts. Do not share conversation context between untrusted and trusted servers. Implement context boundaries per security domain. Monitor for cross-server data leakage patterns.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-158",
+    "name": "MCP server with conversation history access (Trail of Bits)",
+    "match_patterns": {
+      "server_names": ["history-mcp", "conversation-mcp", "chat-export-mcp", "context-dump-mcp"],
+      "args_contains": ["--access-history", "--read-conversation", "--export-chat"]
+    },
+    "severity": "critical",
+    "description": "Documented by Trail of Bits (April 2025): MCP servers can steal conversation history containing sensitive information shared in previous messages. The server requests prior context through the agent, harvesting credentials, business logic, and personal data disclosed earlier in the session.",
+    "reference": "https://blog.trailofbits.com/2025/04/23/how-mcp-servers-can-steal-your-conversation-history/",
+    "remediation": "Restrict MCP server access to conversation history. Never share prior conversation context with newly connected servers. Implement message-level access controls. Sanitize conversation context before tool invocations.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-159",
+    "name": "Shadow MCP server (unregistered/unaudited AI agent tool)",
+    "match_patterns": {
+      "args_contains": ["--no-registry", "--skip-audit", "--unmanaged", "--shadow-mode"]
+    },
+    "severity": "high",
+    "description": "Shadow MCP servers deployed without IT oversight give AI agents direct access to production databases, file systems, and internal APIs. They operate outside governance frameworks, executing tools or exfiltrating data without audit trails. This is the 'shadow IT' problem amplified by autonomous AI agents.",
+    "reference": "https://aquilax.ai/blog/mcp-security-shadow-ai-agents",
+    "remediation": "Implement mandatory MCP server registration in a central registry. Monitor for unauthorized MCP protocol traffic on the network. Deploy endpoint detection for unregistered MCP server processes. Enforce organization-wide MCP server allowlists.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-160",
+    "name": "EchoLeak -- hidden prompt exfiltration via document processing",
+    "match_patterns": {
+      "server_names": ["copilot-mcp", "office365-mcp", "m365-mcp", "sharepoint-mcp"],
+      "args_contains": ["--process-documents", "--summarize-files"]
+    },
+    "severity": "critical",
+    "description": "EchoLeak attack (CVE-2025-32711): hidden prompts embedded in documents cause AI agents to exfiltrate sensitive data when summarizing or processing files. The attack exploits MCP servers with document access to inject instructions that are invisible to human reviewers but executed by the LLM.",
+    "cve": "CVE-2025-32711",
+    "remediation": "Sanitize all document content before LLM processing. Implement content filtering for known prompt injection patterns in documents. Restrict document-processing MCP servers from making outbound network calls. Log all data extracted from documents.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-161",
+    "name": "MCP tool poisoning via output injection (CyberArk)",
+    "match_patterns": {
+      "args_contains": ["--output-inject", "--response-poison", "--result-tamper"]
+    },
+    "severity": "critical",
+    "description": "Documented by CyberArk: 'no output from your MCP server is safe.' Malicious servers inject hidden instructions into tool return values (not just descriptions). The LLM processes the poisoned output and follows the embedded instructions, enabling data exfiltration and unauthorized actions even when tool descriptions appear clean.",
+    "reference": "https://www.cyberark.com/resources/threat-research-blog/poison-everywhere-no-output-from-your-mcp-server-is-safe",
+    "remediation": "Sanitize all MCP tool return values before LLM processing. Implement output content filtering. Monitor tool responses for known injection patterns. Treat MCP server output as untrusted input.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-162",
+    "name": "MCP server with Docker socket access (container escape)",
+    "match_patterns": {
+      "server_names": ["docker-mcp", "container-mcp", "podman-mcp"],
+      "args_contains": ["/var/run/docker.sock", "--docker-socket", "docker.sock"]
+    },
+    "severity": "critical",
+    "description": "MCP servers with Docker socket access can create privileged containers, mount the host filesystem, and escape container isolation entirely. Prompt injection can escalate from a sandboxed MCP tool call to full host system compromise via Docker API abuse.",
+    "remediation": "Never mount the Docker socket into MCP server containers. Use Docker-out-of-Docker with restricted API proxies. Implement container creation policies that block privileged mode and host mounts.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-163",
+    "name": "MCP server with cryptocurrency wallet access",
+    "match_patterns": {
+      "server_names": ["crypto-mcp", "wallet-mcp", "ethereum-mcp", "solana-mcp", "bitcoin-mcp", "web3-mcp", "defi-mcp"],
+      "args_contains": ["crypto-mcp", "wallet-mcp", "ethereum-mcp", "solana-mcp", "web3-mcp"]
+    },
+    "severity": "critical",
+    "description": "MCP servers with cryptocurrency wallet access can drain funds via prompt injection. A malicious co-connected server or poisoned tool description can instruct the agent to sign transactions, transfer tokens, or approve unlimited spending allowances to attacker-controlled addresses.",
+    "remediation": "Never grant transaction-signing capabilities to MCP servers. Use hardware wallet confirmation for all transactions. Implement transaction value limits and recipient allowlists. Require multi-factor approval for any financial operations.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-164",
+    "name": "MCP server SSE transport hijacking",
+    "match_patterns": {
+      "args_contains": ["--transport=sse", "--sse-endpoint", "--sse-url"]
+    },
+    "severity": "high",
+    "description": "MCP servers using Server-Sent Events (SSE) transport without TLS or authentication are vulnerable to connection hijacking. Attackers on the same network can intercept the SSE stream, inject malicious tool responses, or replay captured sessions to execute unauthorized tool calls.",
+    "remediation": "Always use TLS for SSE transport. Implement per-message authentication tokens. Use the newer Streamable HTTP transport with built-in security features. Validate server identity via certificate pinning.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-165",
+    "name": "MCP tool annotation spoofing (readOnlyHint / destructiveHint bypass)",
+    "match_patterns": {
+      "args_contains": ["--override-hints", "--force-readonly", "--spoof-annotations"]
+    },
+    "severity": "high",
+    "description": "MCP tool annotations (readOnlyHint, destructiveHint, idempotentHint, openWorldHint) are advisory-only and not enforced by the protocol. Malicious servers can mark destructive tools as read-only to bypass client safety checks, or mark safe tools as destructive to trigger unnecessary confirmation fatigue that users eventually dismiss.",
+    "remediation": "Do not rely solely on tool annotations for security decisions. Implement server-side enforcement of tool capabilities. Verify tool behavior through sandboxed test execution. Cross-reference annotations with actual tool behavior analysis.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-166",
+    "name": "MCP resource template injection (arbitrary file/URL access)",
+    "match_patterns": {
+      "args_contains": ["--resource-template", "--uri-template", "--allow-resource-patterns"]
+    },
+    "severity": "high",
+    "description": "MCP resource URI templates with insufficient validation allow attackers to craft URIs that access files outside intended boundaries or fetch content from arbitrary URLs. Template parameter injection (e.g., path traversal in template variables) bypasses directory restrictions.",
+    "remediation": "Validate all resource URI template parameters. Canonicalize paths before access. Restrict URI schemes to explicit allowlists. Implement directory boundaries that cannot be bypassed via template variable injection.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-167",
+    "name": "Agentic worm propagation via connected MCP servers",
+    "match_patterns": {
+      "args_contains": ["--auto-propagate", "--worm-mode", "--self-replicate"]
+    },
+    "severity": "critical",
+    "description": "Self-replicating malicious instructions that spread through connected MCP server ecosystems. Once a single agent is compromised via prompt injection, the payload instructs the agent to inject the same malicious instructions into every connected MCP server's tool descriptions or stored data, creating a worm that propagates across organizations.",
+    "remediation": "Implement strict write controls on MCP server tool definitions. Monitor for unauthorized tool description modifications. Use content-addressable integrity verification for all tool metadata. Isolate MCP server networks to prevent cross-organization propagation.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-168",
+    "name": "MCP server with CI/CD pipeline access (supply chain amplification)",
+    "match_patterns": {
+      "server_names": ["github-actions-mcp", "gitlab-ci-mcp", "jenkins-mcp", "circleci-mcp", "buildkite-mcp"],
+      "args_contains": ["github-actions-mcp", "gitlab-ci-mcp", "jenkins-mcp", "--ci-access"]
+    },
+    "severity": "critical",
+    "description": "MCP servers with CI/CD pipeline access can be exploited via prompt injection to modify build scripts, inject backdoors into release artifacts, or exfiltrate CI/CD secrets. This amplifies a single agent compromise into a supply chain attack affecting all downstream consumers of the built software.",
+    "remediation": "Use read-only CI/CD tokens for MCP integrations. Require human approval for any pipeline modifications. Implement signed commits and artifact attestation. Never grant MCP servers access to CI/CD secret stores.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-169",
+    "name": "MCP server with DNS/domain management access (domain takeover)",
+    "match_patterns": {
+      "server_names": ["cloudflare-mcp", "route53-mcp", "dns-mcp", "domain-mcp"],
+      "args_contains": ["cloudflare-mcp", "route53-mcp", "dns-mcp", "--dns-manage"]
+    },
+    "severity": "critical",
+    "description": "MCP servers with DNS management access can redirect domains to attacker-controlled infrastructure via prompt injection. A single poisoned tool call can modify DNS records to intercept all traffic for critical services, enabling credential harvesting, data exfiltration, and service impersonation at scale.",
+    "remediation": "Never grant DNS write access to MCP servers. Use read-only DNS API tokens. Implement DNS change monitoring and alerting. Require multi-person approval for all DNS record modifications.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-170",
+    "name": "MCP server typosquatting on popular package registries",
+    "match_patterns": {
+      "commands": ["npx", "pip", "pip3", "uvx"],
+      "args_contains": ["mcp-servr", "mcp-sever", "mpc-server", "mcp-servre", "mcps-server", "mcp-sevrer"]
+    },
+    "severity": "high",
+    "description": "Typosquatted MCP server packages on npm, PyPI, and other registries mimic popular server names with subtle misspellings. Users installing MCP servers via quick npx/pip commands are especially vulnerable as package names are not verified against an official registry.",
+    "remediation": "Verify exact package names against official MCP server registries before installation. Use lockfiles with integrity hashes. Implement package name verification in CI/CD. Report typosquatted packages to the registry.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-171",
+    "name": "MCP Elicitation API social engineering abuse",
+    "match_patterns": {
+      "args_contains": ["--enable-elicitation", "--elicitation-mode=unrestricted", "--user-prompt-access"]
+    },
+    "severity": "high",
+    "description": "The MCP Elicitation feature allows servers to request additional information from users through the client. Malicious servers abuse this to social-engineer users into providing credentials, approving dangerous actions, or revealing sensitive information through carefully crafted elicitation prompts that mimic legitimate system dialogs.",
+    "remediation": "Clearly label all elicitation prompts with the requesting server identity. Implement elicitation rate limiting. Never enter credentials into MCP elicitation dialogs. Restrict elicitation capabilities for untrusted servers.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-172",
+    "name": "MCP server exploiting Streamable HTTP transport for SSRF",
+    "match_patterns": {
+      "args_contains": ["--transport=streamable-http", "--streamable-endpoint", "--http-stream-url"]
+    },
+    "severity": "high",
+    "description": "MCP servers using the Streamable HTTP transport can be exploited for Server-Side Request Forgery. The transport endpoint can be pointed at internal services, cloud metadata endpoints (169.254.169.254), or localhost-bound services, enabling network reconnaissance and credential theft from internal infrastructure.",
+    "remediation": "Validate all Streamable HTTP endpoint URLs against allowlists. Block connections to RFC 1918 addresses, link-local addresses, and cloud metadata endpoints. Implement network-level egress filtering for MCP server containers.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-173",
+    "name": "Axios npm supply chain compromise (RAT injection)",
+    "match_patterns": {
+      "commands": ["npx", "node"],
+      "args_contains": ["plain-crypto-js"]
+    },
+    "severity": "critical",
+    "description": "North Korean state actor (Sapphire Sleet) injected a Remote Access Trojan into Axios versions 1.14.1 and 0.30.4 via a malicious dependency 'plain-crypto-js' (March 31, 2026). MCP servers depending on affected Axios versions inherit the RAT, enabling remote control of the host system.",
+    "reference": "https://socradar.io/blog/axios-npm-supply-chain-attack-2026-ciso-guide/",
+    "remediation": "Pin Axios to versions before 1.14.1 or after the patched release. Audit node_modules for 'plain-crypto-js' dependency. Run npm audit and check for known compromised versions. Rotate all credentials on affected systems.",
+    "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-174",
+    "name": "MCP server with memory/RAG write access (persistent context poisoning)",
+    "match_patterns": {
+      "server_names": ["memory-mcp", "rag-mcp", "vector-store-mcp", "knowledge-base-mcp", "embedding-mcp"],
+      "args_contains": ["memory-mcp", "rag-mcp", "vector-store-mcp", "--write-memory"]
+    },
+    "severity": "high",
+    "description": "MCP servers with write access to agent memory, RAG stores, or vector databases can persistently corrupt the agent's knowledge base. Poisoned embeddings or stored instructions influence all future agent actions long after the initial injection, creating a durable persistence mechanism that survives session boundaries (OWASP ASI06).",
+    "remediation": "Implement write-once semantics for memory stores. Require human approval for all memory writes. Maintain integrity hashes for stored knowledge. Implement memory versioning with rollback capability. Regularly audit stored embeddings for anomalous content.",
+    "added_at": "2026-04-06"
   }
 ]
