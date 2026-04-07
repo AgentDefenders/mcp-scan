@@ -227,6 +227,28 @@ const BUILT_IN_TOOL_NAMES = new Set([
   'wallet_sign',
   'wallet_transfer',
   'transaction_send',
+  // 2026-04-07 additions: sampling, notifications, completions, clipboard, browser, logging, progress
+  'create_message',
+  'sampling',
+  'complete',
+  'completion',
+  'notifications',
+  'notify',
+  'progress',
+  'log',
+  'logging',
+  'clipboard',
+  'clipboard_read',
+  'clipboard_write',
+  'browser',
+  'browser_navigate',
+  'browser_screenshot',
+  'browser_click',
+  'screenshot',
+  'open_url',
+  'cancel',
+  'ping',
+  'initialize',
 ])
 
 /** Patterns that closely mimic built-in tool names. */
@@ -289,6 +311,17 @@ const SHADOWING_PATTERNS: Array<{ pattern: RegExp; shadowsBuiltin: string }> = [
   { pattern: /^(?:dns|domain|nameserver)_?(?:update|record|modify|create|delete)?$/i, shadowsBuiltin: 'dns_update' },
   { pattern: /^(?:wallet|crypto|token)_?(?:sign|transfer|send|swap|approve)?$/i, shadowsBuiltin: 'wallet_sign' },
   { pattern: /^(?:annotate|annotation)_?(?:tool|hint|metadata)?$/i, shadowsBuiltin: 'tool_annotations' },
+  // 2026-04-07 additions: sampling, notifications, completions, clipboard, browser, logging
+  { pattern: /^(?:create_?message|sampling|sample)_?(?:request|prompt|query)?$/i, shadowsBuiltin: 'create_message' },
+  { pattern: /^(?:notification|notifications|notify)_?(?:send|message|push)?$/i, shadowsBuiltin: 'notifications' },
+  { pattern: /^(?:complete|completion|completions)_?(?:ref|argument|resource)?$/i, shadowsBuiltin: 'completion' },
+  { pattern: /^(?:clipboard|paste|copy)_?(?:read|write|get|set|access)?$/i, shadowsBuiltin: 'clipboard' },
+  { pattern: /^(?:browser|chrome|firefox|navigate)_?(?:open|click|screenshot|navigate|fetch)?$/i, shadowsBuiltin: 'browser' },
+  { pattern: /^(?:log|logging|logger)_?(?:write|send|message|event)?$/i, shadowsBuiltin: 'logging' },
+  { pattern: /^(?:progress|status)_?(?:update|report|notify|set)?$/i, shadowsBuiltin: 'progress' },
+  { pattern: /^(?:cancel|abort|stop|terminate)_?(?:request|operation|task)?$/i, shadowsBuiltin: 'cancel' },
+  { pattern: /^(?:ping|health|heartbeat|alive)_?(?:check|test|verify)?$/i, shadowsBuiltin: 'ping' },
+  { pattern: /^(?:initialize|init|setup|connect)_?(?:server|client|session)?$/i, shadowsBuiltin: 'initialize' },
 ]
 
 /**

@@ -644,4 +644,109 @@ describe('analyzeSuspiciousEnv', () => {
     expect(findings[0].severity).toBe('medium')
     expect(findings[0].description).toContain('Inspector')
   })
+
+  // 2026-04-07 additions
+  it('detects Perplexity API key (existing) as critical', () => {
+    const s: MCPServer = {
+      name: 'perplexity-mcp',
+      command: 'node',
+      args: [],
+      env: { PERPLEXITY_API_KEY: 'pplx-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('AI/LLM provider')
+  })
+
+  it('detects Fireworks AI key (existing) as critical', () => {
+    const s: MCPServer = {
+      name: 'fireworks-mcp',
+      command: 'node',
+      args: [],
+      env: { FIREWORKS_API_KEY: 'fw-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('AI/LLM provider')
+  })
+
+  it('detects Modal compute credentials as critical', () => {
+    const s: MCPServer = {
+      name: 'modal-mcp',
+      command: 'node',
+      args: [],
+      env: { MODAL_TOKEN_SECRET: 'mts-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('Modal')
+  })
+
+  it('detects Weights & Biases key as high', () => {
+    const s: MCPServer = {
+      name: 'wandb-mcp',
+      command: 'node',
+      args: [],
+      env: { WANDB_API_KEY: 'wandb-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('high')
+    expect(findings[0].description).toContain('Weights')
+  })
+
+  it('detects MLflow tracking credentials as high', () => {
+    const s: MCPServer = {
+      name: 'mlflow-mcp',
+      command: 'node',
+      args: [],
+      env: { MLFLOW_TRACKING_TOKEN: 'mlf-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('high')
+    expect(findings[0].description).toContain('MLflow')
+  })
+
+  it('detects Convex backend credentials as critical', () => {
+    const s: MCPServer = {
+      name: 'convex-mcp',
+      command: 'node',
+      args: [],
+      env: { CONVEX_DEPLOY_KEY: 'convex-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('Convex')
+  })
+
+  it('detects Unkey API management credentials as critical', () => {
+    const s: MCPServer = {
+      name: 'unkey-mcp',
+      command: 'node',
+      args: [],
+      env: { UNKEY_ROOT_KEY: 'unkey_root_test' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('critical')
+    expect(findings[0].description).toContain('Unkey')
+  })
+
+  it('detects Axiom observability token as high', () => {
+    const s: MCPServer = {
+      name: 'axiom-mcp',
+      command: 'node',
+      args: [],
+      env: { AXIOM_TOKEN: 'xaat-test-12345' },
+    }
+    const findings = analyzeSuspiciousEnv(s)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].severity).toBe('high')
+    expect(findings[0].description).toContain('Axiom')
+  })
 })

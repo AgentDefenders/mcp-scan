@@ -984,6 +984,187 @@ describe('analyzeKnownThreats', () => {
     expect(findings.length).toBeGreaterThan(0)
     expect(findings.some((f) => f.description.includes('RAG') || f.description.includes('memory') || f.description.includes('vector'))).toBe(true)
   })
+
+  // 2026-04-07 additions
+  it('detects Streamable HTTP session fixation (CVE-2026-41023)', () => {
+    const server: MCPServer = {
+      name: 'stream-server',
+      command: 'node',
+      args: ['server.js', '--streamable-http'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('Streamable HTTP') || f.description.includes('CVE-2026-41023'))).toBe(true)
+  })
+
+  it('detects ChatGPT Desktop MCP config poisoning', () => {
+    const server: MCPServer = {
+      name: 'chatgpt-mcp',
+      command: 'chatgpt-mcp-bridge',
+      args: [],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('ChatGPT'))).toBe(true)
+  })
+
+  it('detects GitHub Copilot agent mode MCP injection', () => {
+    const server: MCPServer = {
+      name: 'copilot-mcp',
+      command: 'copilot-mcp-server',
+      args: [],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('Copilot'))).toBe(true)
+  })
+
+  it('detects OAuth PKCE bypass via plain challenge method (CVE-2026-44198)', () => {
+    const server: MCPServer = {
+      name: 'oauth-server',
+      command: 'node',
+      args: ['server.js', '--pkce-method=plain'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('PKCE') || f.description.includes('CVE-2026-44198'))).toBe(true)
+  })
+
+  it('detects MCP gateway/proxy credential aggregation', () => {
+    const server: MCPServer = {
+      name: 'mcp-gateway',
+      command: 'mcp-gateway',
+      args: [],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('gateway') || f.description.includes('proxy'))).toBe(true)
+  })
+
+  it('detects Deno JSR typosquatting MCP packages', () => {
+    const server: MCPServer = {
+      name: 'deno-mcp',
+      command: 'deno',
+      args: ['run', 'jsr:@mcp-servers/fetch'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('JSR') || f.description.includes('typosquat'))).toBe(true)
+  })
+
+  it('detects compromised mcp-server-fetch variants', () => {
+    const server: MCPServer = {
+      name: 'fetch-server',
+      command: 'npx',
+      args: ['mcp-server-fetcher'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('fetch') || f.description.includes('SSRF'))).toBe(true)
+  })
+
+  it('detects MCP auto-approval exploitation', () => {
+    const server: MCPServer = {
+      name: 'auto-server',
+      command: 'node',
+      args: ['server.js', '--auto-approve'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('auto-approv'))).toBe(true)
+  })
+
+  it('detects malicious PyPI MCP server packages', () => {
+    const server: MCPServer = {
+      name: 'pypi-mcp',
+      command: 'uvx',
+      args: ['mcp-server-pwn'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('PyPI') || f.description.includes('setup.py'))).toBe(true)
+  })
+
+  it('detects MCP server with excessive filesystem scope', () => {
+    const server: MCPServer = {
+      name: 'fs-server',
+      command: 'node',
+      args: ['server.js', '--allow-write=/'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('filesystem') || f.description.includes('Excessive Agency'))).toBe(true)
+  })
+
+  it('detects MCP server targeting AI config files', () => {
+    const server: MCPServer = {
+      name: 'config-inject',
+      command: 'node',
+      args: ['server.js', '.cursorrules'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('.cursorrules') || f.description.includes('AI assistant'))).toBe(true)
+  })
+
+  it('detects browser automation MCP with user profile access', () => {
+    const server: MCPServer = {
+      name: 'browser-mcp',
+      command: 'node',
+      args: ['server.js', '--user-data-dir'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('browser') || f.description.includes('session'))).toBe(true)
+  })
+
+  it('detects Streamable HTTP transport downgrade to HTTP', () => {
+    const server: MCPServer = {
+      name: 'insecure-transport',
+      command: 'node',
+      args: ['server.js', '--no-tls'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('HTTP') || f.description.includes('TLS'))).toBe(true)
+  })
+
+  it('detects MCP notification abuse patterns', () => {
+    const server: MCPServer = {
+      name: 'notify-server',
+      command: 'node',
+      args: ['server.js', '--enable-notifications'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('notification') || f.description.includes('exfiltration'))).toBe(true)
+  })
+
+  it('detects Go module vanity import path attacks', () => {
+    const server: MCPServer = {
+      name: 'go-mcp',
+      command: 'go',
+      args: ['run', 'github.com/mcp-servers/backdoor'],
+      tools: [],
+    }
+    const findings = analyzeKnownThreats(server)
+    expect(findings.length).toBeGreaterThan(0)
+    expect(findings.some((f) => f.description.includes('Go module') || f.description.includes('vanity'))).toBe(true)
+  })
 })
 
 describe('getKnownThreatCount', () => {
@@ -991,8 +1172,8 @@ describe('getKnownThreatCount', () => {
     expect(getKnownThreatCount()).toBeGreaterThan(0)
   })
 
-  it('returns at least 174 threats (current database size)', () => {
-    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(174)
+  it('returns at least 198 threats (current database size)', () => {
+    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(198)
   })
 
   it('returns a consistent count', () => {

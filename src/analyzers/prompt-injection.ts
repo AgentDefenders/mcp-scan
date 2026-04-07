@@ -330,6 +330,47 @@ const PROMPT_INJECTION_PATTERNS: Array<{ pattern: RegExp; description: string; s
     description: 'DNS record manipulation: attempts to modify DNS records for domain takeover or traffic interception',
     severity: 'critical',
   },
+  // 2026-04-07 additions: context flooding, notification abuse, roots enumeration, browser session hijack, config poisoning, clipboard, sampling escalation
+  {
+    pattern: /(?:return|output|generate)\s+(?:a\s+)?(?:very\s+)?(?:large|huge|massive|enormous)\s+(?:amount|volume|block)\s+(?:of\s+)?(?:text|data|content|tokens)/i,
+    description: 'Context window denial-of-service: instructs the tool to flood the LLM context with large outputs to push out safety instructions (OWASP ASI09)',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:use|abuse|exploit|leverage)\s+(?:the\s+)?(?:sampling|createMessage|create_message)(?:\s+\w+)*?\s+(?:to|for|and)\s+(?:call|invoke|execute|trigger)/i,
+    description: 'MCP sampling recursive escalation: abuses createMessage/sampling to autonomously invoke tools beyond the server original scope (OWASP ASI03 Excessive Agency)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:enumerate|list|discover|scan)\s+(?:all\s+)?(?:project\s+)?(?:roots|workspaces|directories|repositories)\s+(?:and|to|then)\s+(?:find|identify|locate|target)/i,
+    description: 'Roots enumeration for targeted attack: uses roots/list to fingerprint the development environment and identify high-value targets for data exfiltration',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:access|read|steal|copy)\s+(?:the\s+)?(?:browser|chrome|firefox|safari)\s+(?:profile|cookies?|session|storage|passwords?|saved\s+credentials)/i,
+    description: 'Browser session hijacking: attempts to access browser profile data (cookies, saved passwords, session tokens) for account takeover',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:write|create|modify|append)\s+(?:to\s+)?(?:the\s+)?(?:\.cursorrules|\.clinerules|\.github\/copilot|\.claude\/settings|\.continue\/config)/i,
+    description: 'AI assistant config injection: modifies AI coding assistant configuration files to inject persistent malicious instructions across sessions',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:monitor|poll|watch|read)\s+(?:the\s+)?(?:clipboard|paste\s+buffer|copy\s+buffer)\s+(?:for|every|continuously|repeatedly)/i,
+    description: 'Clipboard monitoring for credential harvesting: continuously polls clipboard content to capture credentials and tokens copied by the developer',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:send|embed|hide|encode)\s+(?:data|secrets?|tokens?|credentials?)\s+(?:in|via|through|using)\s+(?:the\s+)?(?:notification|progress|log\s+message)/i,
+    description: 'MCP notification covert channel: embeds exfiltrated data in MCP notification messages that bypass tool-call security monitoring',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:register|install|add)\s+(?:a\s+)?(?:new\s+)?(?:mcp\s+)?(?:server|tool)\s+(?:from|via|using)\s+(?:http:\/\/|untrusted|unknown|dynamic)/i,
+    description: 'Dynamic MCP server registration from untrusted source: installs additional MCP servers at runtime from unverified sources to expand attack surface',
+    severity: 'critical',
+  },
 ]
 
 /**

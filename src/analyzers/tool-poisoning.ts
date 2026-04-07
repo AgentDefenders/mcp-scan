@@ -282,6 +282,47 @@ const HIDDEN_INSTRUCTION_PATTERNS: Array<{ pattern: RegExp; description: string;
     description: 'BCC exfiltration in tool description: hardcoded BCC address for email data theft (Postmark MCP supply chain pattern)',
     severity: 'critical',
   },
+  // 2026-04-07 additions: Streamable HTTP attacks, schema default injection, context flooding, notification abuse, auto-approval exploitation
+  {
+    pattern: /(?:Mcp-Session-Id|session[\s_-]?id)\s*[:=]\s*.*(?:\r\n|\r|\n|%0d%0a|%0D%0A)/i,
+    description: 'HTTP response splitting via MCP session ID: injects CRLF sequences into Streamable HTTP session headers to hijack sessions or poison caches (CVE-2026-41023)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:default|const)\s*[:=]\s*(?:.*eval\s*\(|.*Function\s*\(|.*import\s*\(|.*require\s*\(|.*exec\s*\()/i,
+    description: 'Schema default value code injection: embeds executable code in JSON Schema default/const values to execute when LLMs auto-populate missing parameters',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:notification|notify)\s+(?:with|containing|embedding|including)\s+(?:the\s+)?(?:stolen|harvested|extracted|collected)\s+(?:data|credentials|tokens|secrets)/i,
+    description: 'MCP notification channel abuse: uses notification payloads as a covert exfiltration channel that bypasses tool-call monitoring',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:detect|check|probe|test)\s+(?:if|whether)\s+(?:auto[\s_-]?approv|no[\s_-]?confirm|yolo|skip[\s_-]?permission|trust[\s_-]?all)/i,
+    description: 'Auto-approval detection probe: checks whether the agent runs in auto-approve mode to enable unrestricted tool execution without human review',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:flood|fill|exhaust|overflow)\s+(?:the\s+)?(?:context|token\s+window|prompt\s+buffer|message\s+history)/i,
+    description: 'Context window flooding: attempts to exhaust the LLM context window with irrelevant data to push out safety instructions (OWASP ASI09)',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:write|modify|inject|update)\s+(?:.*?\s)?(?:\.cursorrules|\.clinerules|copilot[\s_-]?instructions|\.claude)/i,
+    description: 'AI assistant config poisoning: modifies IDE AI configuration files (.cursorrules, .clinerules, copilot-instructions) to inject persistent prompt instructions',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:read|access|steal|dump)\s+(?:the\s+)?(?:clipboard|paste\s+buffer|copy\s+buffer|system\s+clipboard)/i,
+    description: 'Clipboard harvesting instruction: attempts to read clipboard contents to steal copied credentials, tokens, or sensitive data',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:downgrade|disable|skip|bypass)\s+(?:tls|https|ssl|certificate\s+verif)/i,
+    description: 'TLS downgrade instruction: attempts to disable transport encryption for MCP connections, enabling network-level interception of tool calls and credentials',
+    severity: 'critical',
+  },
 ]
 
 /**

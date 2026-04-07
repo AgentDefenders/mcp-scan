@@ -355,6 +355,37 @@ const ENV_RULES: EnvRule[] = [
     severity: 'medium',
     description: 'MCP Inspector/debug configuration exposed in MCP server environment -- may enable DNS rebinding or CSRF attacks against the inspector (CVE-2025-49596 pattern)',
   },
+  // 2026-04-07 additions: Modal, W&B, MLflow, Unkey, Convex, Axiom
+  {
+    pattern: /^(?:MODAL_TOKEN_ID|MODAL_TOKEN_SECRET)$/,
+    severity: 'critical',
+    description: 'Modal compute credentials exposed in MCP server environment -- enables deploying arbitrary code on cloud GPU infrastructure',
+  },
+  {
+    pattern: /^(?:WANDB_API_KEY|WEIGHTS_AND_BIASES_KEY)$/,
+    severity: 'high',
+    description: 'Weights & Biases credentials exposed in MCP server environment -- enables access to ML experiment data, model artifacts, and training datasets',
+  },
+  {
+    pattern: /^(?:MLFLOW_TRACKING_TOKEN|MLFLOW_TRACKING_PASSWORD)$/,
+    severity: 'high',
+    description: 'MLflow tracking credentials exposed in MCP server environment -- enables access to ML experiment metadata, model registry, and artifact storage',
+  },
+  {
+    pattern: /^(?:UNKEY_API_KEY|UNKEY_ROOT_KEY)$/,
+    severity: 'critical',
+    description: 'Unkey API key management credentials exposed in MCP server environment -- enables creating, revoking, and managing API keys for all services',
+  },
+  {
+    pattern: /^(?:CONVEX_DEPLOY_KEY|CONVEX_ADMIN_KEY)$/,
+    severity: 'critical',
+    description: 'Convex backend credentials exposed in MCP server environment -- enables full read/write access to application backend data and functions',
+  },
+  {
+    pattern: /^(?:AXIOM_TOKEN|AXIOM_API_TOKEN)$/,
+    severity: 'high',
+    description: 'Axiom observability credentials exposed in MCP server environment -- enables access to application logs, traces, and potentially sensitive operational data',
+  },
 ]
 
 /**

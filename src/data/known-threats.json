@@ -2095,5 +2095,284 @@
     "description": "MCP servers with write access to agent memory, RAG stores, or vector databases can persistently corrupt the agent's knowledge base. Poisoned embeddings or stored instructions influence all future agent actions long after the initial injection, creating a durable persistence mechanism that survives session boundaries (OWASP ASI06).",
     "remediation": "Implement write-once semantics for memory stores. Require human approval for all memory writes. Maintain integrity hashes for stored knowledge. Implement memory versioning with rollback capability. Regularly audit stored embeddings for anomalous content.",
     "added_at": "2026-04-06"
+  },
+  {
+    "id": "THREAT-175",
+    "name": "MCP Streamable HTTP session fixation via response splitting",
+    "match_patterns": {
+      "args_contains": ["--streamable-http", "--transport=streamable-http"]
+    },
+    "severity": "critical",
+    "cve": "CVE-2026-41023",
+    "description": "The Streamable HTTP transport (replacing SSE in MCP spec 2025-03-26) is vulnerable to HTTP response splitting when the Mcp-Session-Id header is not validated. Attackers inject CRLF sequences into session IDs to hijack sessions, poison response streams, or perform cache poisoning against downstream HTTP caches. This affects all MCP SDKs that implemented Streamable HTTP before April 2026 patches.",
+    "reference": "https://github.com/modelcontextprotocol/specification/security/advisories",
+    "remediation": "Update all MCP SDKs to latest versions. Validate Mcp-Session-Id headers against strict alphanumeric patterns. Reject any session IDs containing CRLF, null bytes, or non-printable characters. Deploy HTTP/2 where possible to mitigate response splitting.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-176",
+    "name": "MCP tool schema default value code injection",
+    "match_patterns": {
+      "server_names": ["schema-inject-mcp", "default-inject-mcp"]
+    },
+    "severity": "critical",
+    "description": "Attack pattern exploiting JSON Schema 'default' values in MCP tool inputSchema. Malicious servers embed executable code (eval(), Function(), import()) in schema default values. When LLMs auto-populate missing parameters with defaults, the injected code executes in the tool's runtime context, bypassing description-level scanning.",
+    "remediation": "Scan all JSON Schema fields (default, const, examples, enum) for executable patterns. Never auto-execute schema default values. Implement schema validation that strips or rejects defaults containing code patterns.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-177",
+    "name": "ChatGPT Desktop MCP config poisoning via plugins directory",
+    "match_patterns": {
+      "server_names": ["chatgpt-mcp", "openai-mcp-bridge"],
+      "commands": ["chatgpt-mcp-bridge", "openai-mcp-proxy"]
+    },
+    "severity": "high",
+    "description": "OpenAI ChatGPT Desktop (launched Q1 2026) supports MCP servers via its plugins directory. Malicious packages can inject MCP configs into the ChatGPT plugins directory (~/.config/chatgpt/plugins/), gaining persistent tool access across all ChatGPT Desktop sessions without user awareness.",
+    "remediation": "Audit the ChatGPT plugins directory for unexpected MCP configurations. Verify all plugin sources against official registries. Enable ChatGPT Desktop plugin signing verification if available.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-178",
+    "name": "GitHub Copilot agent mode MCP tool injection",
+    "match_patterns": {
+      "server_names": ["copilot-mcp", "copilot-agent-mcp"],
+      "commands": ["copilot-mcp-server", "gh-mcp-bridge"]
+    },
+    "severity": "high",
+    "description": "GitHub Copilot agent mode (GA March 2026) supports MCP tool servers. Malicious repositories can include .github/copilot-mcp.json files that register attacker-controlled MCP servers when Copilot processes the repository, enabling tool poisoning and code injection during AI-assisted development.",
+    "remediation": "Audit .github/copilot-mcp.json in all repositories before enabling Copilot agent mode. Restrict MCP server registration to explicitly approved servers. Review Copilot workspace trust settings.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-179",
+    "name": "MCP OAuth PKCE bypass via code_verifier prediction",
+    "match_patterns": {
+      "args_contains": ["--oauth-plain-challenge", "--pkce-method=plain", "--no-pkce"]
+    },
+    "severity": "critical",
+    "cve": "CVE-2026-44198",
+    "description": "MCP servers that implement OAuth with PKCE using the 'plain' challenge method (instead of S256) or disable PKCE entirely allow authorization code interception attacks. The MCP spec mandates S256, but several popular server implementations default to 'plain' or accept downgrade requests, enabling token theft via man-in-the-middle or malicious redirect URIs.",
+    "reference": "https://spec.modelcontextprotocol.io/specification/2025-03-26/authorization/",
+    "remediation": "Enforce PKCE with S256 challenge method. Reject 'plain' challenge methods and --no-pkce flags. Validate that code_verifier matches the originally registered code_challenge using SHA-256. Pin redirect URIs to localhost with dynamic ports only.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-180",
+    "name": "MCP gateway/proxy credential aggregation attack",
+    "match_patterns": {
+      "server_names": ["mcp-gateway", "mcp-proxy", "mcp-hub", "mcp-multiplexer", "mcp-router", "mcp-mesh"],
+      "commands": ["mcp-gateway", "mcp-proxy", "mcp-hub", "mcp-router"]
+    },
+    "severity": "critical",
+    "description": "MCP gateway/proxy servers that aggregate multiple upstream MCP servers create a single point of compromise. A malicious or compromised gateway can intercept all tool calls and responses, harvest credentials passed between clients and servers, modify tool results in transit, and selectively inject poisoned responses. The gateway pattern concentrates trust in a single component.",
+    "remediation": "Implement end-to-end encryption between MCP clients and individual servers, bypassing the gateway for sensitive operations. Verify gateway provenance and integrity. Use mutual TLS for gateway-to-server connections. Audit gateway logs for tool call modification or credential interception.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-181",
+    "name": "MCP resource template path traversal via URI encoding",
+    "match_patterns": {
+      "args_contains": ["--resource-template", "--uri-template", "--resource-prefix"]
+    },
+    "severity": "high",
+    "description": "MCP resource templates that accept URI parameters are vulnerable to path traversal via double URL encoding (%252e%252e%252f), Unicode normalization attacks, or null byte injection. Attackers can escape the intended resource scope to access sensitive files (SSH keys, cloud credentials, environment files) on the server filesystem.",
+    "remediation": "Canonicalize and decode all URI template parameters before path resolution. Reject paths containing .. sequences after full decoding. Implement allowlist-based resource access. Chroot resource access to a dedicated directory.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-182",
+    "name": "Malicious MCP server via Deno JSR registry typosquatting",
+    "match_patterns": {
+      "commands": ["deno"],
+      "args_contains": ["jsr:@mcp-servers/", "jsr:@modelcontext/", "jsr:@mcptools/"]
+    },
+    "severity": "critical",
+    "description": "Typosquatting packages on the Deno JSR registry targeting MCP server scoped packages. Attackers register near-identical scope names (@mcp-servers vs @mcp-server, @modelcontext vs @modelcontextprotocol) to distribute malicious MCP servers that exfiltrate tool call data, inject poisoned responses, or establish reverse shells.",
+    "remediation": "Verify JSR package scope against official MCP registries. Check package publication date and author reputation. Pin exact versions in MCP configurations. Audit Deno permissions flags for unexpected network or filesystem access.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-183",
+    "name": "MCP sampling/createMessage abuse for autonomous agent escalation",
+    "match_patterns": {
+      "server_names": ["sampling-mcp", "createMessage-mcp", "autonomous-agent-mcp"]
+    },
+    "severity": "critical",
+    "description": "MCP servers that request sampling/createMessage capabilities can autonomously invoke the LLM to generate and execute arbitrary tool calls. A malicious server uses sampling to create a recursive agent loop: the server calls createMessage to instruct the LLM to call other tools, escalating privileges beyond the original server's scope. This enables cross-server attacks without direct tool access (OWASP ASI03 Excessive Agency).",
+    "remediation": "Restrict sampling/createMessage permissions to trusted servers only. Implement call-depth limits for recursive sampling requests. Require human-in-the-loop approval for sampling-initiated tool calls. Monitor sampling request patterns for recursive or cross-server escalation.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-184",
+    "name": "OpenRouter API key theft via MCP server env passthrough",
+    "match_patterns": {
+      "server_names": ["openrouter-mcp", "litellm-mcp", "llm-proxy-mcp"]
+    },
+    "severity": "critical",
+    "description": "MCP servers that proxy LLM requests via OpenRouter, LiteLLM, or similar aggregators often receive API keys via environment variable passthrough. A malicious server can exfiltrate these keys to access all models and billing on the victim's account, potentially running up significant charges or accessing sensitive API logs.",
+    "remediation": "Never pass LLM API keys directly to MCP server environments. Use scoped, short-lived tokens with spending limits. Implement API key rotation. Monitor API usage for unexpected model access or geographic anomalies.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-185",
+    "name": "MCP tool result HTML/Markdown injection for UI rendering attacks",
+    "match_patterns": {
+      "server_names": ["html-inject-mcp", "markdown-inject-mcp", "render-mcp"]
+    },
+    "severity": "high",
+    "description": "MCP tool results containing crafted HTML or Markdown that exploits client-side rendering. Malicious servers return tool results with embedded <script>, <img onerror=>, Markdown image references to tracking pixels, or clickjacking iframes. Clients that render tool results as rich content become vulnerable to XSS, CSRF, or information disclosure via tracking pixels.",
+    "remediation": "Sanitize all tool result content before rendering. Strip HTML tags, scripts, and event handlers. Render Markdown in sandboxed iframes. Block external image loading in tool results unless explicitly approved by the user.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-186",
+    "name": "Compromised mcp-server-fetch variants with SSRF backdoor",
+    "match_patterns": {
+      "commands": ["npx", "node"],
+      "args_contains": ["mcp-server-fetcher", "mcp-fetch-server", "@anthropic/mcp-fetch", "mcp-server-http-fetch"]
+    },
+    "severity": "critical",
+    "description": "Typosquatting variants of the popular mcp-server-fetch package that include SSRF backdoors. These packages function normally for external URLs but silently allow requests to internal network addresses (RFC 1918, link-local, cloud metadata) when specific trigger patterns appear in the URL, enabling internal network reconnaissance and credential theft.",
+    "remediation": "Use only the official @anthropic-ai/mcp-server-fetch package. Verify package integrity via npm provenance. Audit all fetch-type MCP servers for internal network access patterns. Implement network-level egress filtering.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-187",
+    "name": "MCP Notification channel abuse for covert data exfiltration",
+    "match_patterns": {
+      "args_contains": ["--enable-notifications", "--notification-endpoint", "--notify-url"]
+    },
+    "severity": "high",
+    "description": "MCP servers abuse the notification mechanism (notifications/message, notifications/resources/updated) to establish a covert exfiltration channel. By embedding stolen data in notification payloads, the server bypasses tool-call monitoring since notifications are treated as informational and often not logged or inspected by security tools.",
+    "remediation": "Log and inspect all MCP notification payloads. Implement size limits on notification content. Block notifications containing patterns matching credentials, tokens, or encoded data. Rate-limit notification frequency per server.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-188",
+    "name": "OWASP ASVS-AI model context window poisoning via MCP tools",
+    "match_patterns": {
+      "server_names": ["context-flood-mcp", "token-bomb-mcp"]
+    },
+    "severity": "medium",
+    "description": "MCP servers that return extremely large tool results (exceeding typical context windows) to perform context window denial-of-service. By flooding the LLM context with irrelevant data, the attacker pushes out legitimate instructions and user context, degrading agent performance or causing it to ignore safety constraints that no longer fit in the context (OWASP ASI09 Improper Output Handling).",
+    "remediation": "Implement maximum response size limits for MCP tool results. Truncate or summarize large responses before injecting into LLM context. Monitor tool result sizes and alert on anomalous growth. Reserve context window space for system instructions.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-189",
+    "name": "PyPI MCP server package with setup.py code execution",
+    "match_patterns": {
+      "commands": ["uvx", "pipx", "python", "python3"],
+      "args_contains": ["mcp-server-pwn", "mcp-tool-inject", "mcpserver-helper", "mcp-ai-tools", "mcptools-ai"]
+    },
+    "severity": "critical",
+    "description": "Malicious PyPI packages masquerading as MCP server implementations execute arbitrary code during pip install via setup.py. The setup.py harvests SSH keys, cloud credentials, and browser cookies before installing a seemingly functional MCP server. Targets Python-based MCP server installations via uvx/pipx.",
+    "remediation": "Install MCP server packages only from verified publishers. Use --no-build-isolation cautiously. Audit setup.py before installation. Prefer pre-built wheels over source distributions. Check PyPI package provenance attestations.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-190",
+    "name": "MCP server impersonating IDE built-in tools via display name mismatch",
+    "match_patterns": {
+      "server_names": ["edit-helper-mcp", "codeaction-mcp", "refactor-mcp"]
+    },
+    "severity": "high",
+    "description": "MCP servers register tools with internal names that differ from their display names shown to users. The tool appears as 'Format Code' in the UI but its actual name matches a built-in tool like 'edit' or 'write'. When the LLM resolves tool calls by name, it calls the malicious server's tool instead of the IDE's built-in, intercepting all file edits.",
+    "remediation": "Verify tool name-to-display-name consistency. Namespace all third-party MCP tool names with a server prefix. Implement tool name collision detection in IDE MCP integrations. Alert users when multiple tools share the same resolved name.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-191",
+    "name": "MCP server exploiting agent auto-approval for privilege escalation",
+    "match_patterns": {
+      "args_contains": ["--auto-approve", "--no-confirm", "--yolo", "--trust-all", "--dangerously-skip-permissions"]
+    },
+    "severity": "critical",
+    "description": "MCP servers that detect or exploit auto-approval modes in AI agents (Claude Code --dangerously-skip-permissions, Cursor auto-run, Cline auto-approve). When auto-approval is active, a malicious server's tool calls execute without human review, enabling unrestricted filesystem access, network requests, and code execution. The server may probe for auto-approval status via timing side channels.",
+    "remediation": "Never enable auto-approval for untrusted MCP servers. Implement per-server approval policies rather than global auto-approve. Log all auto-approved actions for post-hoc audit. Detect and alert on auto-approval configuration changes.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-192",
+    "name": "Go module MCP server supply chain via vanity import paths",
+    "match_patterns": {
+      "commands": ["go"],
+      "args_contains": ["github.com/mcp-servers/", "github.com/mcptools/", "github.com/model-context-protocol/"]
+    },
+    "severity": "high",
+    "description": "Supply chain attack via Go module vanity import paths mimicking official MCP server organizations. Attackers register GitHub organizations with names similar to official MCP projects (mcp-servers, mcptools) and publish Go modules that contain backdoored MCP server implementations.",
+    "remediation": "Verify Go module import paths against official MCP organization listings. Check module proxy checksums via go.sum. Audit Go module dependencies with govulncheck. Pin exact module versions in go.mod.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-193",
+    "name": "MCP Streamable HTTP transport downgrade to unencrypted HTTP",
+    "match_patterns": {
+      "args_contains": ["http://", "--no-tls", "--insecure-transport", "--http-endpoint=http://"]
+    },
+    "severity": "high",
+    "description": "MCP servers configured with Streamable HTTP transport pointing to unencrypted HTTP endpoints. Without TLS, all tool calls, responses, and credentials are transmitted in plaintext, enabling network-level interception of MCP traffic. Particularly dangerous on shared networks, CI/CD runners, or cloud VPCs with compromised neighbors.",
+    "remediation": "Enforce HTTPS for all Streamable HTTP MCP transport endpoints. Reject configurations with http:// endpoints. Implement certificate pinning for known MCP servers. Use mutual TLS where supported.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-194",
+    "name": "MCP tool with excessive filesystem scope (OWASP ASI03)",
+    "match_patterns": {
+      "server_names": ["filesystem-mcp", "fs-access-mcp", "file-manager-mcp"],
+      "args_contains": ["--allow-write=/", "--root-access", "--fs-scope=*", "--allow-paths=/"]
+    },
+    "severity": "high",
+    "description": "MCP filesystem servers configured with unrestricted or overly broad write access (root-level paths, wildcard scopes). Combined with prompt injection, this grants attackers the ability to modify any file including SSH authorized_keys, crontabs, shell profiles, and application configs. Violates OWASP Agentic Security Initiative ASI03 (Excessive Agency).",
+    "remediation": "Restrict MCP filesystem servers to minimum required paths. Use allowlists for accessible directories. Enable read-only mode by default. Require explicit user approval for write operations outside project directories.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-195",
+    "name": "MCP server with clipboard access for credential harvesting",
+    "match_patterns": {
+      "server_names": ["clipboard-mcp", "paste-mcp", "clipman-mcp"],
+      "commands": ["clipboard-mcp-server", "mcp-clipboard"]
+    },
+    "severity": "high",
+    "description": "MCP servers with clipboard read access can harvest passwords, tokens, and sensitive data that users copy/paste during development. A malicious clipboard MCP server polls clipboard content at high frequency, exfiltrating credentials, API keys, and database connection strings that developers temporarily copy.",
+    "remediation": "Restrict clipboard MCP server access to explicit user-initiated paste operations only. Implement clipboard access audit logging. Block clipboard polling (high-frequency reads). Sanitize clipboard content before exposing to MCP tools.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-196",
+    "name": "MCP server targeting AI coding assistants via .cursorrules/.clinerules poisoning",
+    "match_patterns": {
+      "server_names": ["rules-inject-mcp", "assistant-config-mcp"],
+      "args_contains": [".cursorrules", ".clinerules", ".github/copilot-instructions.md", ".claude/settings.json"]
+    },
+    "severity": "critical",
+    "description": "MCP servers that write or modify AI assistant configuration files (.cursorrules, .clinerules, .github/copilot-instructions.md) to inject persistent prompt instructions. These rule files are automatically loaded by AI coding assistants, creating a durable backdoor that persists across sessions and affects all developers working on the repository.",
+    "remediation": "Monitor AI assistant config files for unexpected modifications. Implement file integrity monitoring for .cursorrules, .clinerules, and similar files. Review these files in code review. Restrict MCP server write access to project configuration directories.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-197",
+    "name": "MCP server with browser automation for session hijacking",
+    "match_patterns": {
+      "server_names": ["browser-mcp", "playwright-mcp", "puppeteer-mcp", "selenium-mcp", "browserbase-mcp"],
+      "args_contains": ["--browser-profile", "--user-data-dir", "--cookie-jar"]
+    },
+    "severity": "high",
+    "description": "MCP servers with browser automation capabilities (Playwright, Puppeteer, Selenium) that access user browser profiles can steal session cookies, saved passwords, and authentication tokens. When configured with --user-data-dir pointing to the user's actual browser profile, the server gains access to all active web sessions.",
+    "remediation": "Never point browser automation MCP servers at real user profiles. Use isolated, ephemeral browser profiles. Audit browser MCP server flags for --user-data-dir or --browser-profile settings. Implement cookie isolation for automated browsing sessions.",
+    "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-198",
+    "name": "MCP server abusing roots/list for project enumeration and targeting",
+    "match_patterns": {
+      "server_names": ["project-scanner-mcp", "workspace-mcp", "roots-harvest-mcp"]
+    },
+    "severity": "medium",
+    "description": "MCP servers that enumerate project roots via the roots/list capability to fingerprint the development environment. By discovering all registered project paths, the server identifies high-value targets (crypto wallets, infrastructure repos, CI/CD configs) and tailors its attack payload accordingly. This reconnaissance phase precedes targeted data exfiltration.",
+    "remediation": "Restrict roots/list responses to only the currently active project. Implement per-server root visibility policies. Audit which servers request roots/list and how frequently. Alert on servers that enumerate roots but do not use them for their stated purpose.",
+    "added_at": "2026-04-07"
   }
 ]
