@@ -2374,5 +2374,165 @@
     "description": "MCP servers that enumerate project roots via the roots/list capability to fingerprint the development environment. By discovering all registered project paths, the server identifies high-value targets (crypto wallets, infrastructure repos, CI/CD configs) and tailors its attack payload accordingly. This reconnaissance phase precedes targeted data exfiltration.",
     "remediation": "Restrict roots/list responses to only the currently active project. Implement per-server root visibility policies. Audit which servers request roots/list and how frequently. Alert on servers that enumerate roots but do not use them for their stated purpose.",
     "added_at": "2026-04-07"
+  },
+  {
+    "id": "THREAT-199",
+    "name": "Azure MCP Server unauthenticated information disclosure (CVE-2026-32211)",
+    "match_patterns": {
+      "server_names": ["azure-mcp", "azure-mcp-server", "mcp-azure"],
+      "args_contains": ["azure-mcp-server", "@azure/mcp-server", "@azure-mcp/"]
+    },
+    "severity": "critical",
+    "description": "Critical information disclosure in Azure MCP Server (CVSS 9.1). Missing authentication on sensitive endpoints exposes configuration details, API keys, and authentication tokens to unauthenticated remote attackers. Disclosed April 3, 2026 by Microsoft. Distinct from the earlier Azure MCP SSRF issue (CVE-2026-26118).",
+    "cve": "CVE-2026-32211",
+    "reference": "https://cvefeed.io/vuln/detail/CVE-2026-32211",
+    "remediation": "Update Azure MCP Server to the latest patched version immediately. Rotate any API keys or tokens exposed through the affected endpoints. Require authentication on every MCP endpoint. Place Azure MCP Server behind network-level access controls.",
+    "added_at": "2026-04-09"
+  },
+  {
+    "id": "THREAT-200",
+    "name": "FrontMCP / mcp-from-openapi SSRF and local file read (CVE-2026-39885)",
+    "match_patterns": {
+      "server_names": ["frontmcp", "front-mcp", "mcp-from-openapi"],
+      "args_contains": ["mcp-from-openapi", "frontmcp", "@apidevtools/json-schema-ref-parser"]
+    },
+    "severity": "high",
+    "description": "High severity SSRF and local file disclosure (CVSS 7.5) in FrontMCP / mcp-from-openapi. The library uses @apidevtools/json-schema-ref-parser without URL restrictions, allowing malicious OpenAPI specifications with $ref pointers to trigger Server-Side Request Forgery and read arbitrary local files when an agent loads attacker-provided API specs. Disclosed April 8, 2026.",
+    "cve": "CVE-2026-39885",
+    "reference": "https://www.thehackerwire.com/vulnerability/CVE-2026-39885/",
+    "remediation": "Update mcp-from-openapi / FrontMCP to the latest patched version. Restrict $ref URL schemes to HTTPS only. Block file:// and private-IP dereferencing. Do not load OpenAPI specs from untrusted sources without sandboxing.",
+    "added_at": "2026-04-09"
+  },
+  {
+    "id": "THREAT-201",
+    "name": "MCP Go SDK DNS rebinding protection disabled by default (CVE-2026-34742)",
+    "match_patterns": {
+      "commands": ["go"],
+      "args_contains": ["github.com/modelcontextprotocol/go-sdk", "mcp-go-sdk", "modelcontextprotocol/go"]
+    },
+    "severity": "high",
+    "description": "DNS rebinding protection is disabled by default in the Model Context Protocol Go SDK for MCP servers running on localhost. A malicious webpage can rebind DNS to 127.0.0.1 and send unauthenticated tool-invocation requests to the local MCP server from the browser, bypassing same-origin policy and enabling remote compromise of developer workstations. Complements the TypeScript (CVE-2025-66414) and Python (CVE-2025-66416) DNS rebinding fixes.",
+    "cve": "CVE-2026-34742",
+    "reference": "https://advisories.gitlab.com/pkg/golang/github.com/modelcontextprotocol/go-sdk/CVE-2026-34742/",
+    "remediation": "Update the Go MCP SDK to the patched version. Explicitly enable Host header validation and Origin header checks. Require an authentication token for every tool call even on localhost. Prefer stdio transport over HTTP for local servers.",
+    "added_at": "2026-04-09"
+  },
+  {
+    "id": "THREAT-202",
+    "name": "MCPJam Inspector unauthenticated RCE (CVE-2026-23744)",
+    "match_patterns": {
+      "server_names": ["mcpjam-inspector", "mcpjam", "mcp-jam-inspector"],
+      "args_contains": ["mcpjam-inspector", "@mcpjam/inspector", "mcpjam"]
+    },
+    "severity": "critical",
+    "description": "Critical remote code execution in MCPJam Inspector versions 1.4.2 and earlier. The inspector binds to 0.0.0.0 by default and its server-management endpoint accepts unauthenticated HTTP requests to install arbitrary MCP servers. Any attacker on the same network can trigger installation of a malicious MCP server and achieve code execution on the developer workstation. Distinct from the Anthropic MCP Inspector DNS rebinding issue (CVE-2025-49596).",
+    "cve": "CVE-2026-23744",
+    "reference": "https://securityvulnerability.io/vulnerability/CVE-2026-23744",
+    "remediation": "Update MCPJam Inspector to the latest patched version. Bind the inspector to 127.0.0.1 only, never 0.0.0.0. Require an authentication token for the server-management endpoint. Do not expose developer tooling to untrusted networks.",
+    "added_at": "2026-04-09"
+  },
+  {
+    "id": "THREAT-203",
+    "name": "Visual Studio Code mcp.json command injection RCE (CVE-2026-21518)",
+    "match_patterns": {
+      "args_contains": [".vscode/mcp.json", "${workspaceFolder}/$(", "${env:HOME}/$("]
+    },
+    "severity": "critical",
+    "description": "Remote code execution in Microsoft Visual Studio Code via improper validation of user-supplied strings in mcp.json configuration files. A crafted mcp.json shipped in a repository can execute arbitrary code when a developer opens the project in VS Code with MCP enabled. Affects both stable and Insiders builds. Disclosed April 2026.",
+    "cve": "CVE-2026-21518",
+    "reference": "https://www.systemtek.co.uk/2026/04/microsoft-visual-studio-code-mcp-json-command-injection-remote-code-execution-vulnerability-cve-2026-21518/",
+    "remediation": "Update Visual Studio Code to the April 2026 security release. Review mcp.json files from untrusted repositories before opening the project. Use VS Code Workspace Trust to gate MCP execution. Disable workspace-scoped MCP servers for untrusted folders.",
+    "added_at": "2026-04-09"
+  },
+  {
+    "id": "THREAT-204",
+    "name": "suvarchal docker-mcp-server OS command injection (CVE-2026-5741)",
+    "match_patterns": {
+      "server_names": ["docker-mcp-server", "suvarchal-docker-mcp"],
+      "args_contains": ["suvarchal/docker-mcp-server", "docker-mcp-server@0.", "docker-mcp-server@0.1.0"]
+    },
+    "severity": "critical",
+    "description": "OS command injection in suvarchal docker-mcp-server up to 0.1.0, exploitable remotely via HTTP-triggered container-management actions. Attackers execute arbitrary host commands through unsanitized parameters to pull/stop/remove containers, pivoting from the MCP server to full host compromise. Public exploit is available.",
+    "cve": "CVE-2026-5741",
+    "reference": "https://www.redpacketsecurity.com/cve-alert-cve-2026-5741-suvarchal-docker-mcp-server/",
+    "remediation": "Remove the suvarchal docker-mcp-server immediately. Prefer the official Docker MCP server from a verified publisher. Never pass user-provided strings to shell commands; always use execve-style argument arrays with strict allowlists.",
+    "added_at": "2026-04-09"
+  },
+  {
+    "id": "THREAT-205",
+    "name": "codebase-mcp RepoMix OS command injection (CVE-2026-5023)",
+    "match_patterns": {
+      "server_names": ["codebase-mcp", "codebase-mcp-server", "repomix-mcp"],
+      "args_contains": ["DeDeveloper23/codebase-mcp", "codebase-mcp", "repomix"]
+    },
+    "severity": "high",
+    "description": "OS command injection in DeDeveloper23 codebase-mcp via the RepoMix Command Handler. The handler passes user-controlled repository paths and flags into a shell command, allowing local attackers (or remote attackers via prompt injection from indexed repositories) to execute arbitrary commands with the privileges of the MCP server.",
+    "cve": "CVE-2026-5023",
+    "reference": "https://www.sentinelone.com/vulnerability-database/cve-2026-5023/",
+    "remediation": "Update codebase-mcp to the latest patched version. Pass repository paths as argv entries instead of shell strings. Reject path arguments containing shell metacharacters. Run the MCP server under a non-privileged user and filesystem sandbox.",
+    "added_at": "2026-04-09"
+  },
+  {
+    "id": "THREAT-206",
+    "name": "Anthropic MCP TypeScript SDK ReDoS in UriTemplate (CVE-2026-0621)",
+    "match_patterns": {
+      "args_contains": ["@modelcontextprotocol/sdk@0.", "@modelcontextprotocol/sdk@1.0.", "@modelcontextprotocol/sdk@1.1.", "@modelcontextprotocol/sdk@1.2."]
+    },
+    "severity": "high",
+    "description": "Regular expression denial of service (ReDoS) in the UriTemplate class of Anthropic's MCP TypeScript SDK. A crafted URI sent through resources/read triggers catastrophic backtracking, causing 100% CPU utilization and hanging the server for all connected clients. Affects versions prior to the April 2026 patch.",
+    "cve": "CVE-2026-0621",
+    "reference": "https://advisories.gitlab.com/pkg/npm/@modelcontextprotocol/sdk/CVE-2026-0621/",
+    "remediation": "Upgrade @modelcontextprotocol/sdk to the patched version. Validate resource URIs against a strict allowlist before passing to UriTemplate. Apply a per-request CPU timeout on MCP server handlers to contain ReDoS impact.",
+    "added_at": "2026-04-09"
+  },
+  {
+    "id": "THREAT-207",
+    "name": "Flowise CustomMCP Function() constructor RCE actively exploited (CVE-2025-59528)",
+    "match_patterns": {
+      "server_names": ["flowise", "flowise-mcp", "flowiseai"],
+      "args_contains": ["flowise", "CustomMCP", "flowise@3.0.", "flowise@2.", "flowise@1."]
+    },
+    "severity": "critical",
+    "description": "Maximum-severity (CVSS 10.0) code injection in Flowise versions 3.0.5 and earlier. The CustomMCP node passes user-provided server configuration into Node.js Function() constructor without sanitization, yielding child_process and fs access with full Node runtime privileges. Actively exploited in the wild since April 2026 against 12,000+ public instances, first observed from a Starlink IP by VulnCheck.",
+    "cve": "CVE-2025-59528",
+    "reference": "https://thehackernews.com/2026/04/flowise-ai-agent-builder-under-active.html",
+    "remediation": "Upgrade Flowise to 3.1.1 or later (minimum 3.0.6). Audit logs for exploitation attempts against /api/v1/node-load-methods and CustomMCP endpoints. Rotate all credentials reachable from the Flowise host. Do not expose Flowise to the public internet without authentication.",
+    "added_at": "2026-04-09"
+  },
+  {
+    "id": "THREAT-208",
+    "name": "MCP sampling resource theft -- compute quota drain (Unit 42)",
+    "match_patterns": {
+      "args_contains": ["--enable-sampling", "--allow-sampling", "--sampling-unlimited", "sampling/createMessage"]
+    },
+    "severity": "high",
+    "description": "MCP server configured to use the sampling feature without per-server quotas. Palo Alto Unit 42 demonstrated that malicious servers can abuse sampling/createMessage to drain the client's LLM API credits for attacker-controlled workloads, with the output never shown to the user. A single compromised server can silently rack up thousands of dollars in compute costs through sampling-triggered completions the user never sees.",
+    "reference": "https://unit42.paloaltonetworks.com/model-context-protocol-attack-vectors/",
+    "remediation": "Require explicit user consent for every sampling/createMessage call. Enforce per-server token and cost quotas. Log and display all sampling activity in the client UI. Disable sampling entirely for servers that do not need it.",
+    "added_at": "2026-04-09"
+  },
+  {
+    "id": "THREAT-209",
+    "name": "Tool poisoning via SSH and cloud credential file read instructions",
+    "match_patterns": {
+      "args_contains": ["~/.ssh/id_rsa", "~/.ssh/id_ed25519", "~/.aws/credentials", "~/.npmrc", "id_rsa", "id_ed25519", ".aws/credentials"]
+    },
+    "severity": "critical",
+    "description": "Tool poisoning pattern documented by Invariant Labs and Semgrep research: MCP tool descriptions or arguments reference SSH private keys (~/.ssh/id_rsa, ~/.ssh/id_ed25519), AWS credential files (~/.aws/credentials), and ~/.npmrc tokens. Embedded hidden instructions tell the agent to read these files and return their contents to the server. Invisible to the user because tool descriptions are not typically displayed during normal chat.",
+    "reference": "https://invariantlabs.ai/blog/mcp-security-notification-tool-poisoning-attacks",
+    "remediation": "Render every MCP tool description to the user on first load and on any update (rug-pull detection). Block MCP tool arguments that reference private key paths, cloud credential files, or dotenv files. Pin tool versions and verify cryptographic signatures.",
+    "added_at": "2026-04-09"
+  },
+  {
+    "id": "THREAT-210",
+    "name": "Agent goal hijacking via MCP resource content injection (OWASP Agentic)",
+    "match_patterns": {
+      "args_contains": ["--resource-url=http://", "--fetch-resource=", "--auto-resource-load", "--trust-resources"]
+    },
+    "severity": "high",
+    "description": "Agent goal hijack attack from the OWASP Top 10 for Agentic Applications 2026: an MCP server returns crafted resource content that overrides the agent's original objective. Resources are injected into the LLM context as trusted data, so embedded instructions are executed without prompt-level safeguards, allowing attackers to redirect the agent toward attacker-controlled goals across multiple turns.",
+    "reference": "https://blog.alexewerlof.com/p/owasp-top-10-ai-llm-agents",
+    "remediation": "Treat MCP resource content as untrusted input. Apply prompt-injection classifiers to every resource before it enters the context. Namespace resource content with a clear untrusted marker. Require user approval before an agent consumes resources from unauthenticated MCP servers.",
+    "added_at": "2026-04-09"
   }
 ]

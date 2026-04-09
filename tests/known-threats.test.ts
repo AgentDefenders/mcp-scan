@@ -1172,8 +1172,8 @@ describe('getKnownThreatCount', () => {
     expect(getKnownThreatCount()).toBeGreaterThan(0)
   })
 
-  it('returns at least 198 threats (current database size)', () => {
-    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(198)
+  it('returns at least 210 threats (current database size)', () => {
+    expect(getKnownThreatCount()).toBeGreaterThanOrEqual(210)
   })
 
   it('returns a consistent count', () => {
