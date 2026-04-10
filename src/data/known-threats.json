@@ -2543,8 +2543,8 @@
     },
     "severity": "high",
     "description": "DNS rebinding vulnerability in the MCP Java SDK (io.modelcontextprotocol:sdk) for localhost-bound servers. Completes the cross-SDK DNS rebinding series alongside TypeScript (CVE-2025-66414), Python (CVE-2025-66416), and Go (CVE-2026-34742). Malicious webpages rebind DNS to 127.0.0.1 and send unauthorized tool-invocation requests via the browser.",
-    "cve": "CVE-2026-36102",
-    "reference": "https://github.com/modelcontextprotocol/java-sdk/security/advisories",
+    "cve": "CVE-2026-35568",
+    "reference": "https://advisories.gitlab.com/pkg/maven/io.modelcontextprotocol.sdk/mcp-core/CVE-2026-35568/",
     "remediation": "Update the MCP Java SDK to the latest patched version. Enable Host header and Origin header validation. Use stdio transport for local-only servers. Require authentication tokens for all HTTP-based transports.",
     "added_at": "2026-04-10"
   },
@@ -2713,6 +2713,169 @@
     "severity": "high",
     "description": "MCP servers register tools with names containing Unicode homoglyphs (Cyrillic 'a' U+0430 vs Latin 'a' U+0061, Greek omicron vs Latin 'o'). The tool appears identical to a built-in tool in UI rendering but has a different Unicode representation, bypassing exact-match shadowing detection. The LLM may call either the legitimate or malicious tool unpredictably.",
     "remediation": "Normalize all tool names to ASCII before registration. Reject tool names containing mixed-script Unicode characters. Implement confusable detection using Unicode Technical Report #39. Display tool source server alongside tool names in UI.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-226",
+    "name": "PraisonAI OAuth token validation bypass (CVE-2026-34953)",
+    "match_patterns": {
+      "server_names": ["praison-mcp", "praisonai-mcp", "praison"],
+      "args_contains": ["praisonai", "praison-mcp"]
+    },
+    "severity": "critical",
+    "description": "Maximum-severity authentication bypass (CVSS 9.1) in PraisonAI multi-agent framework. The OAuthManager.validate_token() method returns True for any unknown token, granting full API access to unauthenticated attackers. Affects versions prior to 4.5.97.",
+    "cve": "CVE-2026-34953",
+    "reference": "https://www.thehackerwire.com/praisonai-authentication-bypass-grants-full-access-cve-2026-34953/",
+    "remediation": "Update PraisonAI to version 4.5.97 or later. Audit access logs for unauthorized API calls. Implement proper token validation with deny-by-default semantics.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-227",
+    "name": "Cursor IDE MCP deep-link trust bypass (CVE-2025-64106)",
+    "match_patterns": {
+      "server_names": ["cursor-deeplink-mcp", "cursor-install-mcp"],
+      "args_contains": ["cursor://install-mcp", "cursor-mcp-install"]
+    },
+    "severity": "critical",
+    "description": "MCP deep-link trust bypass (CVSS 8.8) in Cursor IDE. Attackers craft deep links that mask malicious MCP server installation commands as legitimate installs, bypassing user verification of the actual command being executed.",
+    "cve": "CVE-2025-64106",
+    "reference": "https://cyata.ai/blog/cyata-research-critical-flaw-in-cursor-mcp-installation/",
+    "remediation": "Update Cursor to the latest version. Verify all MCP server installation commands before approving. Do not click MCP installation links from untrusted sources.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-228",
+    "name": "Cursor IDE CurXecute indirect prompt injection (CVE-2025-54135)",
+    "match_patterns": {
+      "server_names": ["curxecute-mcp"],
+      "args_contains": ["curxecute", "cursor-exploit-mcp"]
+    },
+    "severity": "critical",
+    "description": "Indirect prompt injection (CVSS 8.6) in Cursor IDE allows creating and executing MCP server configuration files (.mcp.json) without user confirmation. Attackers embed prompt injection payloads in project files that Cursor processes, enabling automated MCP server installation and code execution.",
+    "cve": "CVE-2025-54135",
+    "reference": "https://www.tenable.com/blog/faq-cve-2025-54135-cve-2025-54136-vulnerabilities-in-cursor-curxecute-mcpoison",
+    "remediation": "Update Cursor to the latest patched version. Review .mcp.json files before opening untrusted projects. Enable Cursor workspace trust verification.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-229",
+    "name": "Cursor IDE MCPoison config modification after approval (CVE-2025-54136)",
+    "match_patterns": {
+      "server_names": ["mcpoison-mcp"],
+      "args_contains": ["mcpoison", "cursor-poison-mcp"]
+    },
+    "severity": "high",
+    "description": "Rug pull vulnerability (CVSS 7.2) in Cursor IDE. After one-time MCP server approval, an attacker can modify the MCP configuration to change the server command or arguments without triggering re-approval. Enables post-approval command substitution attacks.",
+    "cve": "CVE-2025-54136",
+    "reference": "https://research.checkpoint.com/2025/cursor-vulnerability-mcpoison/",
+    "remediation": "Update Cursor to the latest version. Implement hash-based MCP config verification that detects post-approval modifications. Re-verify MCP configurations periodically.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-230",
+    "name": "mcp-atlassian SSRF via unvalidated Atlassian headers (CVE-2026-27826)",
+    "match_patterns": {
+      "server_names": ["mcp-atlassian", "atlassian-mcp"],
+      "args_contains": ["mcp-atlassian"]
+    },
+    "severity": "critical",
+    "description": "SSRF vulnerability (CVSS 8.2) in mcp-atlassian via unvalidated X-Atlassian-Jira-Url and X-Atlassian-Confluence-Url headers. Distinct from the path traversal RCE (CVE-2026-27825). Enables attackers to reach internal services and steal managed identity tokens from cloud metadata endpoints.",
+    "cve": "CVE-2026-27826",
+    "reference": "https://pluto.security/blog/mcpwnfluence-cve-2026-27825-critical/",
+    "remediation": "Update mcp-atlassian to 0.17.0 or later. Validate all incoming HTTP headers against strict allowlists. Block access to RFC 1918 addresses and cloud metadata endpoints from the MCP server.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-231",
+    "name": "FastMCP OpenAPI Provider SSRF and path traversal (CVE-2026-32871)",
+    "match_patterns": {
+      "server_names": ["fastmcp-openapi", "openapi-mcp"],
+      "args_contains": ["fastmcp", "fast-mcp", "FastMCP", "--openapi-url"]
+    },
+    "severity": "high",
+    "description": "SSRF and path traversal in FastMCP OpenAPI Provider via unencoded path parameters in URL templates. Attackers craft tool call parameters with path traversal sequences that reach internal endpoints or read arbitrary files when the OpenAPI provider constructs upstream HTTP requests.",
+    "cve": "CVE-2026-32871",
+    "reference": "https://github.com/PrefectHQ/fastmcp/security/advisories/GHSA-vv7q-7jx5-f767",
+    "remediation": "Update FastMCP to the latest patched version. URL-encode all path parameters before constructing upstream requests. Validate constructed URLs against an allowlist of expected hosts.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-232",
+    "name": "MCP TypeScript SDK cross-client data leak (CVE-2026-25536)",
+    "match_patterns": {
+      "args_contains": ["@modelcontextprotocol/sdk@1.1", "@modelcontextprotocol/sdk@1.2"]
+    },
+    "severity": "high",
+    "description": "Cross-client data leak in MCP TypeScript SDK versions 1.10.0 through 1.25.3. Shared Server/transport instance reuse causes data from one client session to leak into another client's responses. Affects multi-tenant MCP server deployments where multiple clients connect to a single server process.",
+    "cve": "CVE-2026-25536",
+    "reference": "https://cvefeed.io/vuln/detail/CVE-2026-25536",
+    "remediation": "Update @modelcontextprotocol/sdk to version 1.26.0 or later. Ensure Server instances are not shared across client connections. Use per-connection transport isolation.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-233",
+    "name": "MCP Go SDK Streamable HTTP CSRF (CVE-2026-33252)",
+    "match_patterns": {
+      "commands": ["go"],
+      "args_contains": ["github.com/modelcontextprotocol/go-sdk"]
+    },
+    "severity": "medium",
+    "description": "Cross-Site Request Forgery in MCP Go SDK Streamable HTTP transport. The transport accepts cross-site POST requests without Origin header validation or Content-Type enforcement. Malicious web pages can send tool-invocation requests to localhost-bound MCP servers via the browser.",
+    "cve": "CVE-2026-33252",
+    "reference": "https://advisories.gitlab.com/pkg/golang/github.com/modelcontextprotocol/go-sdk/CVE-2026-33252/",
+    "remediation": "Update the Go MCP SDK to the latest version. Enforce Origin header validation on all Streamable HTTP endpoints. Require Content-Type: application/json for POST requests. Add CSRF token validation.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-234",
+    "name": "stata-mcp do-file command execution (CVE-2026-31040)",
+    "match_patterns": {
+      "server_names": ["stata-mcp", "stata-mcp-server"],
+      "args_contains": ["stata-mcp"]
+    },
+    "severity": "high",
+    "description": "Insufficient validation of Stata do-file content in stata-mcp allows arbitrary command execution. Attackers craft Stata do-files with embedded shell commands that execute when processed by the MCP server.",
+    "cve": "CVE-2026-31040",
+    "remediation": "Update stata-mcp to the latest patched version. Validate and sanitize all do-file content before execution. Restrict Stata shell escape commands.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-235",
+    "name": "magento2-dev-mcp OS command injection (CVE-2026-5603)",
+    "match_patterns": {
+      "server_names": ["magento2-dev-mcp", "magento-mcp"],
+      "args_contains": ["magento2-dev-mcp", "magento-mcp"]
+    },
+    "severity": "critical",
+    "description": "OS command injection in magento2-dev-mcp via the executeMagerun2Command handler. Unsanitized input is passed directly to shell execution, enabling arbitrary command execution on the host system.",
+    "cve": "CVE-2026-5603",
+    "remediation": "Remove magento2-dev-mcp or update to a patched version. Use execve-style argument arrays instead of shell string concatenation. Validate all command inputs against strict allowlists.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-236",
+    "name": "mcp-data-vis SQL injection (CVE-2026-5322)",
+    "match_patterns": {
+      "server_names": ["mcp-data-vis", "data-vis-mcp", "datavis-mcp"],
+      "args_contains": ["mcp-data-vis", "data-vis-mcp"]
+    },
+    "severity": "high",
+    "description": "SQL injection in mcp-data-vis MCP Handler database function. User-controlled input from tool parameters is interpolated directly into SQL queries without parameterization, enabling data exfiltration, modification, or destruction.",
+    "cve": "CVE-2026-5322",
+    "remediation": "Update mcp-data-vis to the latest patched version. Use parameterized queries exclusively. Restrict database user permissions to read-only where possible.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-237",
+    "name": "Smithery.ai MCP registry path traversal and credential exposure",
+    "match_patterns": {
+      "server_names": ["smithery-mcp", "smithery"],
+      "args_contains": ["smithery.ai", "smithery-mcp", "--registry=smithery"]
+    },
+    "severity": "critical",
+    "description": "Path traversal vulnerability in the Smithery.ai MCP server registry (October 2025) exposed 3,000+ hosted MCP servers, API keys, and an overprivileged fly.io deployment token via misconfigured dockerBuildPath parameters. First major MCP registry compromise.",
+    "reference": "https://blog.gitguardian.com/breaking-mcp-server-hosting/",
+    "remediation": "Rotate all API keys registered through Smithery.ai. Verify server integrity for any MCP servers hosted on the platform. Use self-hosted registries with proper access controls.",
     "added_at": "2026-04-10"
   }
 ]
