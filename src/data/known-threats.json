@@ -2534,5 +2534,185 @@
     "reference": "https://blog.alexewerlof.com/p/owasp-top-10-ai-llm-agents",
     "remediation": "Treat MCP resource content as untrusted input. Apply prompt-injection classifiers to every resource before it enters the context. Namespace resource content with a clear untrusted marker. Require user approval before an agent consumes resources from unauthenticated MCP servers.",
     "added_at": "2026-04-09"
+  },
+  {
+    "id": "THREAT-211",
+    "name": "MCP Java SDK DNS rebinding (CVE-2026-36102)",
+    "match_patterns": {
+      "args_contains": ["io.modelcontextprotocol:sdk", "mcp-java-sdk", "io.modelcontextprotocol"]
+    },
+    "severity": "high",
+    "description": "DNS rebinding vulnerability in the MCP Java SDK (io.modelcontextprotocol:sdk) for localhost-bound servers. Completes the cross-SDK DNS rebinding series alongside TypeScript (CVE-2025-66414), Python (CVE-2025-66416), and Go (CVE-2026-34742). Malicious webpages rebind DNS to 127.0.0.1 and send unauthorized tool-invocation requests via the browser.",
+    "cve": "CVE-2026-36102",
+    "reference": "https://github.com/modelcontextprotocol/java-sdk/security/advisories",
+    "remediation": "Update the MCP Java SDK to the latest patched version. Enable Host header and Origin header validation. Use stdio transport for local-only servers. Require authentication tokens for all HTTP-based transports.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-212",
+    "name": "JetBrains Junie MCP config injection via project files",
+    "match_patterns": {
+      "server_names": ["junie-mcp", "jetbrains-mcp", "junie-inject"],
+      "args_contains": [".junie/mcp/mcp.json", "junie-mcp-server"]
+    },
+    "severity": "high",
+    "description": "Malicious repositories can include .junie/mcp/mcp.json files that register attacker-controlled MCP servers when opened in JetBrains IDEs with Junie AI assistant enabled. Similar to the VS Code mcp.json injection (CVE-2026-21518) and Claude Code project file exploitation (CVE-2025-59536).",
+    "remediation": "Audit .junie/mcp/mcp.json in cloned repositories before opening. Restrict workspace-scoped MCP server registration to pre-approved servers. Enable Junie workspace trust settings.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-213",
+    "name": "Gemini CLI MCP configuration injection via settings.json",
+    "match_patterns": {
+      "server_names": ["gemini-mcp-inject", "gemini-cli-exploit"],
+      "args_contains": [".gemini/settings.json", "gemini-mcp-config"]
+    },
+    "severity": "high",
+    "description": "Malicious packages or repository files inject MCP server entries into the Gemini CLI settings (~/.gemini/settings.json). When the user runs Gemini CLI, the injected servers gain tool execution access. Follows the same pattern as SANDWORM_MODE's targeting of Claude Desktop, Cursor, and VS Code configurations.",
+    "remediation": "Monitor ~/.gemini/settings.json for unauthorized changes. Use file integrity monitoring. Restrict write access to Gemini CLI configuration files. Verify all MCP server entries against known-good sources.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-214",
+    "name": "Zed editor MCP settings manipulation via workspace config",
+    "match_patterns": {
+      "server_names": ["zed-mcp-inject", "zed-exploit-mcp"],
+      "args_contains": [".zed/settings.json", "zed-mcp-server"]
+    },
+    "severity": "high",
+    "description": "Malicious repositories can include .zed/settings.json files that register MCP servers when opened in the Zed editor. Zed's MCP configuration is embedded in its general settings file, making it harder to distinguish MCP changes from other configuration changes during code review.",
+    "remediation": "Review .zed/settings.json in untrusted repositories before opening. Separate MCP configuration from general editor settings where possible. Implement workspace trust prompts for MCP server registration.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-215",
+    "name": "Amazon Q Developer MCP config injection",
+    "match_patterns": {
+      "server_names": ["amazonq-mcp-inject", "q-developer-exploit"],
+      "args_contains": [".aws/amazonq/default.json", "amazonq-mcp-server"]
+    },
+    "severity": "high",
+    "description": "Malicious packages inject MCP server configurations into the Amazon Q Developer config (~/.aws/amazonq/default.json). The injected servers gain access to the agent's tool execution capabilities and potentially inherit AWS credentials from the developer's environment.",
+    "remediation": "Audit ~/.aws/amazonq/default.json for unauthorized MCP entries. Use AWS SSO instead of static credentials. Implement file integrity monitoring on Amazon Q Developer configuration files.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-216",
+    "name": "MCP OAuth Protected Resource Metadata poisoning",
+    "match_patterns": {
+      "args_contains": ["--resource-metadata", "/.well-known/oauth-protected-resource", "--trust-resource-metadata"]
+    },
+    "severity": "high",
+    "description": "Malicious MCP servers serve crafted Protected Resource Metadata (RFC 9728) at /.well-known/oauth-protected-resource that redirects OAuth flows to attacker-controlled authorization servers. The MCP spec requires clients to discover the authorization server via this endpoint, creating a trust-on-first-use vulnerability.",
+    "reference": "https://spec.modelcontextprotocol.io/specification/2025-03-26/authorization/",
+    "remediation": "Validate discovered authorization server URLs against an allowlist. Implement TOFU pinning for authorization servers after first successful connection. Alert users when the authorization server changes between connections. Require HTTPS for all discovery endpoints.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-217",
+    "name": "MCP server with AWS Bedrock model invocation access",
+    "match_patterns": {
+      "server_names": ["bedrock-mcp", "aws-bedrock-mcp", "bedrock-agent-mcp", "bedrock-runtime-mcp"],
+      "args_contains": ["bedrock-mcp", "aws-bedrock-mcp", "--bedrock-endpoint"]
+    },
+    "severity": "high",
+    "description": "MCP server with access to AWS Bedrock model invocation APIs. Prompt injection can abuse Bedrock access to invoke expensive foundation models, access knowledge bases containing sensitive enterprise data, or chain through Bedrock Agents to reach downstream AWS services with the assumed IAM role's permissions.",
+    "remediation": "Use IAM policies with bedrock:InvokeModel restricted to specific model IDs. Implement per-session token budgets. Deny access to bedrock:CreateAgent and bedrock:UpdateKnowledgeBase. Monitor Bedrock usage for unexpected model invocations.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-218",
+    "name": "MCP Streamable HTTP Content-Type negotiation bypass",
+    "match_patterns": {
+      "args_contains": ["--accept-all-content-types", "--no-content-type-check", "--content-type-override"]
+    },
+    "severity": "high",
+    "description": "MCP Streamable HTTP transport implementations that do not strictly validate Content-Type headers. Attackers exploit lenient content negotiation to inject non-JSON payloads (HTML, multipart) that are misinterpreted by the client, enabling response splitting, XSS in rendered tool results, or parser confusion attacks.",
+    "remediation": "Enforce strict Content-Type validation (application/json for POST, text/event-stream for SSE). Reject responses with unexpected Content-Type headers. Implement server identity verification via TLS certificate pinning.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-219",
+    "name": "A2A-to-MCP bridge protocol confusion attack",
+    "match_patterns": {
+      "server_names": ["a2a-mcp-bridge", "a2a-to-mcp", "agent-bridge", "protocol-bridge-mcp"],
+      "args_contains": ["a2a-mcp-bridge", "a2a-to-mcp", "--bridge-a2a"]
+    },
+    "severity": "critical",
+    "description": "Protocol bridge servers that translate between Google A2A (Agent-to-Agent) protocol and MCP create trust boundary confusion. A2A tasks lack the tool-level permission model of MCP, allowing A2A agents to invoke MCP tools without the approval gates that MCP clients enforce. Attackers route malicious requests through A2A to bypass MCP client-side safety checks.",
+    "remediation": "Implement equivalent permission checks on both sides of the protocol bridge. Require user approval for all cross-protocol tool invocations. Log all bridged requests for audit. Do not inherit trust from one protocol into the other.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-220",
+    "name": "MCP server with code review/merge approval access",
+    "match_patterns": {
+      "server_names": ["pr-review-mcp", "merge-mcp", "code-review-mcp", "approve-pr-mcp"],
+      "args_contains": ["pr-review-mcp", "merge-mcp", "code-review-mcp", "--approve-merges"]
+    },
+    "severity": "critical",
+    "description": "MCP server with access to approve pull requests, merge code, or bypass branch protection rules. Prompt injection can auto-approve and merge attacker-controlled code changes, bypassing code review requirements and introducing backdoors directly into protected branches.",
+    "remediation": "Never grant PR approval or merge permissions to MCP servers. Use read-only tokens for code review integrations. Require human-in-the-loop for all merge operations. Enforce branch protection rules that MCP tokens cannot override.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-221",
+    "name": "MCP server exploiting Terraform state file secrets exposure",
+    "match_patterns": {
+      "server_names": ["terraform-state-mcp", "tfstate-mcp"],
+      "args_contains": ["terraform.tfstate", "--tfstate-path", "--state-file", "tfstate"]
+    },
+    "severity": "critical",
+    "description": "MCP servers with access to Terraform state files (.tfstate) can read plaintext secrets stored in state. Terraform state often contains database passwords, API keys, TLS certificates, and cloud provider credentials in unencrypted form. Prompt injection can extract these secrets via resource attribute queries.",
+    "remediation": "Never grant MCP servers direct access to Terraform state files. Use Terraform remote backends with encryption at rest. Enable state file encryption. Access state only through terraform state show with restricted IAM permissions.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-222",
+    "name": "MCP server agentic loop budget exhaustion (token bomb)",
+    "match_patterns": {
+      "args_contains": ["--no-budget-limit", "--unlimited-tokens", "--no-cost-limit", "--infinite-loop"]
+    },
+    "severity": "high",
+    "description": "MCP servers that intentionally trigger agentic reasoning loops to exhaust the client's token budget. Malicious tool results contain instructions that create circular dependencies between tools, causing the agent to repeatedly invoke tools in an endless cycle. Research shows token amplification up to 142x through trivial text repetition and staged subtask generation.",
+    "reference": "https://arxiv.org/html/2602.14798v1",
+    "remediation": "Implement hard per-session token budgets and tool call count limits. Detect circular tool call patterns with cycle detection algorithms. Set per-tool invocation rate limits. Display real-time token usage to the user.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-223",
+    "name": "MCP server with log aggregation write access (audit tampering)",
+    "match_patterns": {
+      "server_names": ["elasticsearch-mcp", "opensearch-mcp", "loki-mcp", "logstash-mcp", "fluentd-mcp"],
+      "args_contains": ["elasticsearch-mcp", "opensearch-mcp", "loki-mcp", "--log-write-access"]
+    },
+    "severity": "high",
+    "description": "MCP server with write access to log aggregation systems (Elasticsearch, OpenSearch, Loki). Prompt injection can manipulate the agent into deleting or modifying audit logs to cover tracks, injecting false log entries for attribution confusion, or exfiltrating sensitive data captured in application logs.",
+    "remediation": "Use append-only credentials for MCP log integrations. Implement write-once-read-many (WORM) log retention policies. Restrict MCP servers to read-only log access. Enable tamper-evident logging with cryptographic chaining.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-224",
+    "name": "Continue.dev MCP config injection via YAML deserialization",
+    "match_patterns": {
+      "server_names": ["continue-mcp-inject", "continue-exploit-mcp"],
+      "args_contains": [".continue/config.yaml", "continue-mcp-server"]
+    },
+    "severity": "high",
+    "description": "Malicious repositories include .continue/config.yaml files that register attacker-controlled MCP servers when opened with the Continue.dev AI extension. Continue uses YAML configuration which supports anchors, aliases, and custom tags that can be exploited for config injection beyond simple MCP server registration.",
+    "remediation": "Audit .continue/config.yaml in untrusted repositories. Use safe YAML parsing that rejects custom tags and complex aliases. Restrict workspace-scoped MCP server registration. Enable Continue workspace trust verification.",
+    "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-225",
+    "name": "MCP homoglyph tool name confusion attack",
+    "match_patterns": {
+      "server_names": ["homoglyph-mcp", "lookalike-mcp"],
+      "args_contains": ["--allow-unicode-names", "--unicode-tool-names"]
+    },
+    "severity": "high",
+    "description": "MCP servers register tools with names containing Unicode homoglyphs (Cyrillic 'a' U+0430 vs Latin 'a' U+0061, Greek omicron vs Latin 'o'). The tool appears identical to a built-in tool in UI rendering but has a different Unicode representation, bypassing exact-match shadowing detection. The LLM may call either the legitimate or malicious tool unpredictably.",
+    "remediation": "Normalize all tool names to ASCII before registration. Reject tool names containing mixed-script Unicode characters. Implement confusable detection using Unicode Technical Report #39. Display tool source server alongside tool names in UI.",
+    "added_at": "2026-04-10"
   }
 ]

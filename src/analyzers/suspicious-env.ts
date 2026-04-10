@@ -386,6 +386,57 @@ const ENV_RULES: EnvRule[] = [
     severity: 'high',
     description: 'Axiom observability credentials exposed in MCP server environment -- enables access to application logs, traces, and potentially sensitive operational data',
   },
+  // 2026-04-10 additions: cloud AI model access, GitHub App keys, IDE session tokens, IaC state, protocol bridge
+  {
+    pattern: /^(?:BEDROCK_ACCESS_KEY|BEDROCK_SECRET_KEY|AWS_BEDROCK_TOKEN|SAGEMAKER_API_KEY)$/,
+    severity: 'critical',
+    description: 'AWS AI service credentials (Bedrock/SageMaker) exposed in MCP server environment -- enables unauthorized foundation model invocations and knowledge base access',
+  },
+  {
+    pattern: /^(?:GITHUB_APP_PRIVATE_KEY|GITHUB_APP_ID|GITHUB_INSTALLATION_ID)$/,
+    severity: 'critical',
+    description: 'GitHub App private key or installation credentials exposed in MCP server environment -- enables impersonation of the GitHub App with all granted repository permissions',
+  },
+  {
+    pattern: /^(?:COPILOT_API_KEY|COPILOT_TOKEN|GITHUB_COPILOT_TOKEN)$/,
+    severity: 'critical',
+    description: 'GitHub Copilot credentials exposed in MCP server environment -- enables unauthorized AI code generation access and billing abuse',
+  },
+  {
+    pattern: /^(?:CLAUDE_CODE_API_KEY|CLAUDE_CODE_SESSION|ANTHROPIC_SESSION_KEY)$/,
+    severity: 'critical',
+    description: 'Claude Code session or API credentials exposed in MCP server environment -- enables unauthorized access to the Claude Code session and all its capabilities',
+  },
+  {
+    pattern: /^(?:CURSOR_SESSION_TOKEN|WINDSURF_SESSION_TOKEN|CLINE_SESSION_TOKEN)$/,
+    severity: 'critical',
+    description: 'IDE AI assistant session token exposed in MCP server environment -- enables session hijacking and unauthorized tool execution in the IDE context',
+  },
+  {
+    pattern: /^(?:TF_TOKEN|TERRAFORM_CLOUD_TOKEN|PULUMI_ACCESS_TOKEN|SPACELIFT_API_KEY)$/,
+    severity: 'critical',
+    description: 'IaC platform credentials exposed in MCP server environment -- enables unauthorized infrastructure provisioning, state access, and resource destruction',
+  },
+  {
+    pattern: /^(?:A2A_BEARER_TOKEN|A2A_CLIENT_SECRET|A2A_SESSION_KEY)$/,
+    severity: 'critical',
+    description: 'Agent-to-Agent (A2A) protocol bearer token or client secret exposed in MCP server environment -- enables impersonation and injection across agent boundaries',
+  },
+  {
+    pattern: /^(?:ELASTICSEARCH_PASSWORD|OPENSEARCH_PASSWORD|LOKI_TOKEN|SPLUNK_HEC_TOKEN)$/,
+    severity: 'high',
+    description: 'Log aggregation platform credentials exposed in MCP server environment -- enables audit log tampering, sensitive log data exfiltration, and detection evasion',
+  },
+  {
+    pattern: /^(?:GEMINI_SESSION_TOKEN|GEMINI_CLI_TOKEN|GOOGLE_AI_STUDIO_KEY)$/,
+    severity: 'critical',
+    description: 'Google Gemini/AI Studio session credentials exposed in MCP server environment -- enables unauthorized model access and billing abuse',
+  },
+  {
+    pattern: /^(?:DENO_AUTH_TOKEN|DENO_DEPLOY_TOKEN|BUN_AUTH_TOKEN)$/,
+    severity: 'high',
+    description: 'Deno/Bun runtime authentication token exposed in MCP server environment -- enables unauthorized package publishing and serverless function deployment',
+  },
 ]
 
 /**

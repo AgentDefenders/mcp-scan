@@ -371,6 +371,57 @@ const PROMPT_INJECTION_PATTERNS: Array<{ pattern: RegExp; description: string; s
     description: 'Dynamic MCP server registration from untrusted source: installs additional MCP servers at runtime from unverified sources to expand attack surface',
     severity: 'critical',
   },
+  // 2026-04-10 additions: A2A bridge abuse, Bedrock/model access, state file exfil, OAuth metadata, goal hijacking, homoglyph confusion
+  {
+    pattern: /(?:route|forward|bridge|translate)\s+(?:the\s+)?(?:request|call|action|command)\s+(?:through|via|to)\s+(?:a2a|agent[\s_-]?to[\s_-]?agent|external\s+agent)/i,
+    description: 'A2A protocol bridge exploitation: routes MCP tool calls through Agent-to-Agent protocol to bypass client-side approval gates and permission checks',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:invoke|call|access)\s+(?:the\s+)?(?:bedrock|sagemaker|vertex[\s_-]?ai|foundation\s+model)\s+(?:endpoint|api|model)/i,
+    description: 'Cloud AI model service abuse: invokes cloud foundation model APIs (Bedrock, SageMaker, Vertex AI) to generate malicious content or drain compute budgets via the MCP server',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:read|access|parse|load)\s+(?:the\s+)?(?:terraform|tfstate|pulumi|cloudformation)\s+(?:state|output|stack|template)\s+(?:file|data)/i,
+    description: 'IaC state file credential extraction: reads Terraform state, Pulumi outputs, or CloudFormation exports that commonly contain plaintext secrets, database passwords, and cloud credentials',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:fetch|request|load)\s+(?:the\s+)?(?:\.well[\s_-]?known|oauth[\s_-]?metadata|protected[\s_-]?resource[\s_-]?metadata|authorization[\s_-]?server[\s_-]?metadata)/i,
+    description: 'OAuth metadata discovery manipulation: fetches well-known OAuth metadata endpoints that can be poisoned to redirect authorization flows to attacker-controlled servers',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:shift|drift|evolve|gradually\s+change)\s+(?:the\s+)?(?:conversation|context|behavior|objective|goal)\s+(?:over|across|between)\s+(?:turns?|messages?|interactions?)/i,
+    description: 'Multi-turn goal drift attack: gradually shifts the agent objective across multiple conversation turns to avoid single-turn injection detection',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:use|apply|insert)\s+(?:unicode\s+)?(?:homoglyph|confusable|lookalike|visually[\s_-]?similar)\s+(?:character|letter|symbol)/i,
+    description: 'Homoglyph confusion attack: uses visually identical Unicode characters from different scripts to evade keyword-based security filters while appearing benign to human reviewers',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:approve|merge|accept)\s+(?:the\s+)?(?:pull\s+request|PR|merge\s+request|MR|code\s+change|commit)\s+(?:automatically|without\s+review|immediately)/i,
+    description: 'Automated code approval: instructs the agent to approve or merge code changes without human review, enabling supply chain compromise via trusted CI/CD pipelines',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:modify|write|update|inject)\s+(?:the\s+)?(?:\.junie|\.gemini|\.amazonq|\.continue|\.zed)[\s/._-]*(?:mcp|config|settings)/i,
+    description: 'IDE MCP config injection (expanded): targets additional IDE configurations (Junie, Gemini CLI, Amazon Q, Continue, Zed) to inject malicious MCP servers',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:exhaust|drain|consume|deplete)\s+(?:the\s+)?(?:token|compute|api|credit|billing)\s+(?:budget|quota|limit|allowance)/i,
+    description: 'Token/compute budget exhaustion: intentionally drains the agent API credits or compute quota through wasteful operations or recursive tool invocations',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:delete|modify|tamper|clear)\s+(?:the\s+)?(?:audit|log|trace|event)\s+(?:trail|record|entry|history|data)/i,
+    description: 'Audit log tampering: attempts to delete or modify security audit logs to cover tracks after malicious activity',
+    severity: 'critical',
+  },
 ]
 
 /**

@@ -323,6 +323,47 @@ const HIDDEN_INSTRUCTION_PATTERNS: Array<{ pattern: RegExp; description: string;
     description: 'TLS downgrade instruction: attempts to disable transport encryption for MCP connections, enabling network-level interception of tool calls and credentials',
     severity: 'critical',
   },
+  // 2026-04-10 additions: homoglyph evasion, agent goal hijacking, model context manipulation, protocol confusion, resource metadata poisoning
+  {
+    pattern: /(?:use|substitute|replace)\s+(?:with\s+)?(?:unicode|homoglyph|lookalike|cyrillic|greek)\s+(?:character|letter|glyph)/i,
+    description: 'Homoglyph evasion instruction: uses Unicode lookalike characters (Cyrillic/Greek) to bypass keyword detection while appearing identical to human reviewers',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:redirect|change|override|shift)\s+(?:the\s+)?(?:agent|assistant|ai)\s*(?:'?s?\s+)?(?:goal|objective|task|mission|purpose)/i,
+    description: 'Agent goal hijacking: attempts to redirect the agent away from the user original objective toward attacker-controlled goals (OWASP Agentic Top 10)',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:invoke|call|use)\s+(?:the\s+)?(?:model|llm|ai|assistant)\s+(?:to|for|and)\s+(?:generate|create|produce)\s+(?:code|script|command)\s+(?:that|which|to)\s+/i,
+    description: 'Model-as-code-generator exploitation: instructs the tool to use the LLM to generate and execute arbitrary code, bypassing static analysis of tool descriptions',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:bridge|translate|convert|forward)\s+(?:this\s+)?(?:request|call|message)\s+(?:via|through|to)\s+(?:a2a|agent[\s_-]?to[\s_-]?agent|grpc|websocket)/i,
+    description: 'Protocol confusion attack: bridges MCP tool calls to other protocols (A2A, gRPC, WebSocket) to bypass MCP client-side permission enforcement',
+    severity: 'high',
+  },
+  {
+    pattern: /(?:serve|return|provide)\s+(?:crafted|custom|modified)\s+(?:oauth|resource)\s+(?:metadata|discovery|well[\s_-]?known)/i,
+    description: 'OAuth/resource metadata poisoning: serves crafted .well-known discovery documents to redirect authorization flows to attacker-controlled endpoints',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:terraform|tfstate|pulumi)\s+(?:state|output|plan)\s+(?:file|data|content|secrets?)/i,
+    description: 'IaC state file secrets extraction: references Terraform/Pulumi state files that commonly contain plaintext database passwords, API keys, and cloud credentials',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:intercept|capture|tap|sniff)\s+(?:the\s+)?(?:mcp|tool|server)\s+(?:traffic|request|response|stream|connection)/i,
+    description: 'MCP traffic interception: attempts to capture or monitor MCP protocol traffic for credential harvesting or tool response manipulation',
+    severity: 'critical',
+  },
+  {
+    pattern: /(?:merge|approve|accept)\s+(?:the\s+)?(?:pull\s+request|PR|merge\s+request|MR|commit|change)\s+(?:without|skipping|bypassing)\s+(?:review|approval|check)/i,
+    description: 'Code review bypass: instructs the agent to approve or merge code changes without proper review, enabling unauthorized code to enter protected branches',
+    severity: 'critical',
+  },
 ]
 
 /**
