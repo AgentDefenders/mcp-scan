@@ -2877,5 +2877,166 @@
     "reference": "https://blog.gitguardian.com/breaking-mcp-server-hosting/",
     "remediation": "Rotate all API keys registered through Smithery.ai. Verify server integrity for any MCP servers hosted on the platform. Use self-hosted registries with proper access controls.",
     "added_at": "2026-04-10"
+  },
+  {
+    "id": "THREAT-238",
+    "name": "n8n-mcp authenticated SSRF via instance URL header (GHSA-4ggg-h7ph-26qr)",
+    "match_patterns": {
+      "server_names": ["n8n-mcp"],
+      "args_contains": ["n8n-mcp", "@n8n/n8n-mcp", "n8n-mcp@"]
+    },
+    "severity": "high",
+    "description": "SSRF in n8n-mcp (npm) versions below 2.47.4. A holder of a valid AUTH_TOKEN can supply attacker-controlled X-Instance-URL style headers; the server then issues HTTP requests to arbitrary URLs and reflects the response body through JSON-RPC, enabling reads of AWS/GCP/Azure IMDS endpoints and internal services in multi-tenant deployments.",
+    "reference": "https://advisories.gitlab.com/pkg/npm/n8n-mcp/GHSA-4ggg-h7ph-26qr/",
+    "remediation": "Upgrade n8n-mcp to 2.47.4 or later. Disable multi-tenant HTTP mode when not required. Do not share AUTH_TOKEN with less-trusted clients. Block egress to RFC 1918 addresses and cloud metadata endpoints from the n8n-mcp process.",
+    "added_at": "2026-04-11"
+  },
+  {
+    "id": "THREAT-239",
+    "name": "AWS API MCP Server file-access restriction bypass (CVE-2026-4270)",
+    "match_patterns": {
+      "server_names": ["aws-api-mcp-server", "awslabs.aws-api-mcp-server"],
+      "args_contains": ["awslabs.aws-api-mcp-server", "aws-api-mcp-server"]
+    },
+    "severity": "medium",
+    "description": "File-access restriction bypass in awslabs.aws-api-mcp-server PyPI package (>=0.2.14, <1.3.9). The no-access and workdir modes fail to canonicalize alternate paths, letting AWS CLI commands routed through the MCP server read arbitrary local files outside the configured workdir including ~/.aws/credentials, SSH keys, and .env files.",
+    "cve": "CVE-2026-4270",
+    "reference": "https://github.com/awslabs/mcp/security/advisories/GHSA-2cpp-j2fc-qhp7",
+    "remediation": "Upgrade awslabs.aws-api-mcp-server to 1.3.9 or later. Avoid running the server with the unrestricted file-access setting. Run the MCP server as a dedicated low-privilege user with no read access to ~/.aws or ~/.ssh.",
+    "added_at": "2026-04-11"
+  },
+  {
+    "id": "THREAT-240",
+    "name": "Tencent WeKnora MCP stdio config validation bypass RCE (CVE-2026-30861)",
+    "match_patterns": {
+      "server_names": ["weknora", "weknora-mcp"],
+      "args_contains": ["github.com/tencent/weknora", "weknora"]
+    },
+    "severity": "critical",
+    "description": "Unauthenticated RCE in Tencent WeKnora (>=0.2.5, <0.2.10). The MCP stdio configuration validator whitelists npx/uvx and blacklists specific args, but the blacklist can be bypassed with npx -p node to execute attacker-supplied JavaScript. Combined with open user registration this yields unauthenticated remote code execution on the host (CVSS 9.9).",
+    "cve": "CVE-2026-30861",
+    "reference": "https://advisories.gitlab.com/pkg/golang/github.com/tencent/weknora/CVE-2026-30861/",
+    "remediation": "Upgrade WeKnora to 0.2.10 or later. Disable open user registration. Restrict MCP server config endpoints to authenticated admins. Replace command allowlists with a strict, structured argv allowlist rather than string-level blacklisting.",
+    "added_at": "2026-04-11"
+  },
+  {
+    "id": "THREAT-241",
+    "name": "mcp-bridge unauthenticated RCE via /bridge endpoint (GHSA-wvr4-3wq4-gpc5)",
+    "match_patterns": {
+      "server_names": ["mcp-bridge", "mcp-connect"],
+      "args_contains": ["mcp-bridge", "mcp-connect", "start:tunnel"]
+    },
+    "severity": "critical",
+    "description": "Unauthenticated RCE in mcp-bridge (mcp-connect) default configuration. When AUTH_TOKEN and ACCESS_TOKEN are unset (the out-of-the-box default), the /bridge HTTP endpoint accepts any POST containing serverPath and args and spawns an arbitrary OS process as the bridge user. Heightened risk when exposed via ngrok through npm run start:tunnel.",
+    "reference": "https://advisories.gitlab.com/pkg/npm/mcp-bridge/GHSA-wvr4-3wq4-gpc5/",
+    "remediation": "Always set AUTH_TOKEN and ACCESS_TOKEN. Bind the bridge to 127.0.0.1 only. Firewall port 3000 from the public internet. Upgrade to the patched release. Never expose mcp-bridge via a public tunnel without authentication.",
+    "added_at": "2026-04-11"
+  },
+  {
+    "id": "THREAT-242",
+    "name": "Claude Code CLI TERMINAL env var command injection (CVE-2026-35020)",
+    "match_patterns": {
+      "server_names": ["claude-code", "anthropic-claude-code"],
+      "args_contains": ["@anthropic-ai/claude-code"]
+    },
+    "severity": "high",
+    "description": "Command injection in @anthropic-ai/claude-code CLI and Claude Agent SDK through v2.1.91. The command-lookup helper and deep-link terminal launcher pass the TERMINAL environment variable into a shell invocation without sanitization, letting a local attacker who can influence env vars inject arbitrary commands.",
+    "cve": "CVE-2026-35020",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2026-35020",
+    "remediation": "Upgrade @anthropic-ai/claude-code to the latest patched release. In shared CI runners, scrub the TERMINAL env var before invoking claude. Avoid running claude in environments where untrusted processes can set arbitrary env vars.",
+    "added_at": "2026-04-11"
+  },
+  {
+    "id": "THREAT-243",
+    "name": "Claude Code CLI prompt-editor file-path command injection (CVE-2026-35021)",
+    "match_patterns": {
+      "server_names": ["claude-code", "anthropic-claude-code"],
+      "args_contains": ["@anthropic-ai/claude-code"]
+    },
+    "severity": "high",
+    "description": "Command injection in @anthropic-ai/claude-code CLI and Claude Agent SDK via the prompt-editor invocation utility. The utility builds a shell command from user-controllable file paths without escaping, so a malicious project file path triggers arbitrary command execution when the editor is launched.",
+    "cve": "CVE-2026-35021",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2026-35021",
+    "remediation": "Upgrade @anthropic-ai/claude-code to the latest patched release. Never open untrusted repositories with the prompt editor enabled. Use execve-style argv arrays for editor launching instead of shell string concatenation.",
+    "added_at": "2026-04-11"
+  },
+  {
+    "id": "THREAT-244",
+    "name": "Claude Code CLI auth helper shell=true injection (CVE-2026-35022)",
+    "match_patterns": {
+      "server_names": ["claude-code", "anthropic-claude-code"],
+      "args_contains": ["@anthropic-ai/claude-code"]
+    },
+    "severity": "critical",
+    "description": "Critical OS command injection (CVSS 9.8) in @anthropic-ai/claude-code CLI and Claude Agent SDK. The authentication-helper invocation reads helper configuration values and executes them via shell=true with no validation, so a malicious ~/.claude/settings.json or workspace .claude settings file yields full command execution as the developer.",
+    "cve": "CVE-2026-35022",
+    "reference": "https://www.thehackerwire.com/anthropic-claude-cli-sdk-os-command-injection-cve-2026-35022/",
+    "remediation": "Upgrade @anthropic-ai/claude-code to the latest patched release. Treat .claude/settings.json and helper configs from untrusted repositories as hostile. Review workspace settings before opening untrusted projects with Claude Code.",
+    "added_at": "2026-04-11"
+  },
+  {
+    "id": "THREAT-245",
+    "name": "LangChain Core load_prompt path traversal (CVE-2026-34070)",
+    "match_patterns": {
+      "args_contains": ["langchain-core", "langchain_core", "load_prompt_from_config", "langchain_core.prompts.loading"]
+    },
+    "severity": "high",
+    "description": "Path traversal (CVSS 7.5) in langchain-core <1.2.22. load_prompt() and load_prompt_from_config() open paths embedded in deserialized config dicts without traversal or absolute-path validation, letting attacker-controlled prompt configs read arbitrary .txt, .json, and .yaml files such as /etc/passwd or ~/.ssh/*.",
+    "cve": "CVE-2026-34070",
+    "reference": "https://github.com/langchain-ai/langchain/security/advisories/GHSA-qh6h-p6c9-ff54",
+    "remediation": "Upgrade langchain-core to 1.2.22 or later. Migrate from load_prompt/load_prompt_from_config to the langchain_core.load dumpd/loads APIs. Never pass allow_dangerous_paths=True. Do not load prompt configs from untrusted sources.",
+    "added_at": "2026-04-11"
+  },
+  {
+    "id": "THREAT-246",
+    "name": "LiteLLM PyPI supply-chain compromise (March 2026)",
+    "match_patterns": {
+      "args_contains": ["litellm==1.82.7", "litellm==1.82.8", "litellm@1.82.7", "litellm@1.82.8"]
+    },
+    "severity": "critical",
+    "description": "Malicious LiteLLM releases 1.82.7 and 1.82.8 published to PyPI on March 24, 2026 via a compromised CI pipeline (initial access via a Trivy vulnerability). The packages executed payloads on import and via Python startup hooks, exfiltrating SSL/SSH keys, cloud credentials, kube configs, Git credentials, API keys, shell history, and crypto wallets. 40,000+ downloads before takedown.",
+    "reference": "https://docs.litellm.ai/blog/security-update-march-2026",
+    "remediation": "Pin litellm to a known-good version (<=1.82.6 or a clean release post-1.82.8). Rotate ALL secrets reachable from any host that installed 1.82.7 or 1.82.8. Audit ~/.python_history and outbound connections. Rebuild affected container images.",
+    "added_at": "2026-04-11"
+  },
+  {
+    "id": "THREAT-247",
+    "name": "@mobilenext/mobile-mcp screenshot path traversal file write (CVE-2026-33989)",
+    "match_patterns": {
+      "server_names": ["mobile-mcp", "@mobilenext/mobile-mcp"],
+      "args_contains": ["@mobilenext/mobile-mcp", "mobile-mcp"]
+    },
+    "severity": "high",
+    "description": "Arbitrary file write (CVSS 8.1) in @mobilenext/mobile-mcp <0.0.49. The mobile_save_screenshot and mobile_start_screen_recording MCP tools pass saveTo/output parameters straight to filesystem APIs without sanitization, so a poisoned tool call containing ../ sequences writes arbitrary files anywhere the MCP process can write, including shell rc files or binaries on PATH.",
+    "cve": "CVE-2026-33989",
+    "reference": "https://advisories.gitlab.com/pkg/npm/@mobilenext/mobile-mcp/CVE-2026-33989/",
+    "remediation": "Upgrade @mobilenext/mobile-mcp to 0.0.49 or later. Sandbox the MCP process to a writable workspace directory. Validate saveTo/output parameters against a strict allowlist of target directories.",
+    "added_at": "2026-04-11"
+  },
+  {
+    "id": "THREAT-248",
+    "name": "LibreChat MCP header injection OAuth token theft (GHSA-pmw7-gqwj-f954)",
+    "match_patterns": {
+      "server_names": ["librechat", "librechat-mcp"],
+      "args_contains": ["librechat", "LIBRECHAT_OPENID_ACCESS_TOKEN"]
+    },
+    "severity": "high",
+    "description": "OAuth token theft in LibreChat >=v0.8.2-rc1 and <=v0.8.3-rc1. User-created MCP server configs accept arbitrary HTTP headers, and processMCPEnv() substitutes credential placeholders such as {{LIBRECHAT_OPENID_ACCESS_TOKEN}} inside those headers at tool-call time. A malicious MCP server entry can therefore harvest victims' OAuth access tokens because omitServerManagedFields() excludes headers from its blocklist.",
+    "reference": "https://github.com/danny-avila/LibreChat/security/advisories/GHSA-pmw7-gqwj-f954",
+    "remediation": "Upgrade LibreChat to v0.8.3-rc2 or later. Audit MCP server entries for placeholder usage in headers. Rotate any OAuth tokens that may have been exposed to user-defined MCP servers. Restrict which users can create MCP server configurations.",
+    "added_at": "2026-04-11"
+  },
+  {
+    "id": "THREAT-249",
+    "name": "@grackle-ai/mcp knowledge_search workspace auth bypass (GHSA-647h-p824-99w7)",
+    "match_patterns": {
+      "server_names": ["grackle-ai-mcp", "@grackle-ai/mcp", "grackle-mcp"],
+      "args_contains": ["@grackle-ai/mcp", "grackle-ai"]
+    },
+    "severity": "medium",
+    "description": "Authorization bypass in @grackle-ai/mcp <0.70.2. The knowledge_search and knowledge_get_node MCP tools are exposed in SCOPED_TOOLS (visible to scoped agents) but their handlers omit the workspace authorization check, letting an agent scoped to workspace A query the knowledge graph of workspace B in the same multi-tenant deployment.",
+    "reference": "https://advisories.gitlab.com/pkg/npm/@grackle-ai/mcp/GHSA-647h-p824-99w7/",
+    "remediation": "Upgrade @grackle-ai/mcp to 0.70.2 or later. In multi-tenant deployments, audit logs for cross-workspace knowledge_search and knowledge_get_node calls. Enforce workspace scoping in every tool handler, not only at the tool-listing layer.",
+    "added_at": "2026-04-11"
   }
 ]

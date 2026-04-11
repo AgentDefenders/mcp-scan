@@ -16,7 +16,7 @@ import { printGitHubAnnotations, writeStepSummary } from './reporters/github.js'
 import { runWatchMode } from './drift/index.js'
 import type { ScanResult, ScanSummary } from './types.js'
 
-const SCANNER_VERSION = '0.10.0-alpha'
+const SCANNER_VERSION = '0.12.0-alpha'
 
 /** Badge color mapping by grade. */
 const BADGE_COLORS: Record<string, string> = {
