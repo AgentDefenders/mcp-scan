@@ -3038,5 +3038,151 @@
     "reference": "https://advisories.gitlab.com/pkg/npm/@grackle-ai/mcp/GHSA-647h-p824-99w7/",
     "remediation": "Upgrade @grackle-ai/mcp to 0.70.2 or later. In multi-tenant deployments, audit logs for cross-workspace knowledge_search and knowledge_get_node calls. Enforce workspace scoping in every tool handler, not only at the tool-listing layer.",
     "added_at": "2026-04-11"
+  },
+  {
+    "id": "THREAT-250",
+    "name": "nginx-ui unauthenticated MCP endpoint nginx takeover (CVE-2026-33032)",
+    "match_patterns": {
+      "server_names": ["nginx-ui", "nginxui", "nginx-ui-mcp"],
+      "args_contains": ["nginx-ui", "github.com/0xjacky/nginx-ui"]
+    },
+    "severity": "critical",
+    "description": "Unauthenticated remote nginx takeover (CVSS 9.8) in nginx-ui <=2.3.5. The /mcp endpoint requires both IP whitelisting and AuthRequired() middleware, but /mcp_message only enforces IP whitelisting and the default whitelist is empty -- which the middleware treats as 'allow all'. Any network attacker can invoke MCP tools to restart nginx, create/modify/delete nginx configs, and trigger config reloads, achieving complete nginx service takeover without authentication.",
+    "cve": "CVE-2026-33032",
+    "reference": "https://advisories.gitlab.com/pkg/golang/github.com/0xjacky/nginx-ui/CVE-2026-33032/",
+    "remediation": "Upgrade nginx-ui beyond 2.3.5 once a patch is released. Immediately firewall the nginx-ui admin port from the public internet. Apply AuthRequired() middleware to /mcp_message. Change the IP whitelist default from 'allow-all' to 'deny-all' when unconfigured. Monitor nginx config files for unauthorized changes.",
+    "added_at": "2026-04-12"
+  },
+  {
+    "id": "THREAT-251",
+    "name": "aws-mcp-server command injection RCE (CVE-2026-5058)",
+    "match_patterns": {
+      "server_names": ["aws-mcp-server", "aws-mcp"],
+      "args_contains": ["aws-mcp-server", "aws-mcp"]
+    },
+    "severity": "critical",
+    "description": "Critical unauthenticated command injection (CVSS 9.8) in aws-mcp-server. The server maintains an allowed-commands list but fails to properly validate user-supplied strings before passing them to a system call, permitting classic shell metacharacter injection. An attacker with network access can craft a malicious string that bypasses validation and executes arbitrary OS commands as the MCP process user. This is a distinct product from the official awslabs.aws-api-mcp-server (CVE-2026-4270).",
+    "cve": "CVE-2026-5058",
+    "reference": "https://www.thehackerwire.com/aws-mcp-server-remote-code-execution-via-command-injection-cve-2026-5058/",
+    "remediation": "Bind aws-mcp-server to 127.0.0.1 only. Firewall the service from the public internet. Migrate to the official awslabs.aws-api-mcp-server (>=1.3.9). Replace string-based command allowlists with strict argv-based execution. Audit shell invocations for unsanitized user input.",
+    "added_at": "2026-04-12"
+  },
+  {
+    "id": "THREAT-252",
+    "name": "aws-mcp-server AWS CLI command injection RCE (CVE-2026-5059)",
+    "match_patterns": {
+      "server_names": ["aws-mcp-server", "aws-mcp"],
+      "args_contains": ["aws-mcp-server"]
+    },
+    "severity": "critical",
+    "description": "Critical unauthenticated RCE (CVSS 9.8) in aws-mcp-server via AWS CLI command injection. Separate from CVE-2026-5058, this flaw lets an attacker inject AWS CLI subcommand strings that the server shells out without escaping, executing arbitrary code in the MCP process context and pivoting to AWS account compromise via the server's instance role credentials.",
+    "cve": "CVE-2026-5059",
+    "reference": "https://www.thehackerwire.com/aws-mcp-server-aws-cli-command-injection-rce/",
+    "remediation": "Disable aws-mcp-server until patched. Rotate any IAM credentials accessible from the server. Switch to the official awslabs.aws-api-mcp-server. Always invoke the AWS CLI via execFile/argv arrays rather than a shell, and enforce a strict allowlist of subcommands/flags.",
+    "added_at": "2026-04-12"
+  },
+  {
+    "id": "THREAT-253",
+    "name": "LangChain Core LangGrinch serialization injection (CVE-2025-68664)",
+    "match_patterns": {
+      "args_contains": ["langchain-core<0.3.81", "langchain-core<1.2.5", "langchain_core.load.dumpd", "additional_kwargs"]
+    },
+    "severity": "critical",
+    "description": "Critical serialization injection (CVSS 9.3, 'LangGrinch') in LangChain Core <0.3.81 and <1.2.5. The dumps()/dumpd() helpers fail to escape dictionaries containing the internal 'lc' key, so LLM-controlled fields such as additional_kwargs or response_metadata are rehydrated as real LangChain objects. With the historical secrets_from_env=True default an attacker can exfiltrate environment-variable secrets, instantiate classes from the langchain_core/langchain/langchain_community namespaces, and reach arbitrary code execution via Jinja2 templates. Most reachable through prompt injection in streaming MCP tool responses.",
+    "cve": "CVE-2025-68664",
+    "reference": "https://github.com/advisories/GHSA-c67j-w6g6-q2cm",
+    "remediation": "Upgrade langchain-core to >=0.3.81 or >=1.2.5. Never set secrets_from_env=True. Treat LLM-authored fields (additional_kwargs, response_metadata, tool_call args) as untrusted before serialization. Sanitize or drop unknown 'lc' keys on ingest. Audit agent pipelines that round-trip LLM outputs through dumps()/loads().",
+    "added_at": "2026-04-12"
+  },
+  {
+    "id": "THREAT-254",
+    "name": "LiteLLM JWT userinfo cache collision auth bypass (CVE-2026-35030)",
+    "match_patterns": {
+      "args_contains": ["litellm<1.83.0", "enable_jwt_auth", "litellm-proxy"]
+    },
+    "severity": "critical",
+    "description": "Critical authentication bypass in LiteLLM <1.83.0 when enable_jwt_auth is true. The OIDC userinfo cache uses only the first 20 characters of a JWT as the cache key. An unauthenticated attacker can craft a token whose first 20 characters collide with a legitimate user's cached token; on cache hit the attacker inherits that user's identity, permissions, and the cached userinfo claims. Defaults are unaffected (JWT auth is off by default) but any deployment that enabled it -- common in self-hosted proxy setups fronting MCP agents -- is vulnerable.",
+    "cve": "CVE-2026-35030",
+    "reference": "https://advisories.gitlab.com/pkg/pypi/litellm/CVE-2026-35030/",
+    "remediation": "Upgrade LiteLLM to 1.83.0 or later (cache key now uses the full JWT hash). Rotate JWT signing keys and invalidate cached sessions. Disable JWT auth if not strictly required. Audit access logs for impossible-path authentications and cache-key collisions.",
+    "added_at": "2026-04-12"
+  },
+  {
+    "id": "THREAT-255",
+    "name": "LiteLLM /config/update privilege escalation RCE (CVE-2026-35029)",
+    "match_patterns": {
+      "args_contains": ["litellm<1.83.0", "litellm_proxy", "/config/update"]
+    },
+    "severity": "high",
+    "description": "High-severity privilege escalation in LiteLLM <1.83.0. The /config/update proxy endpoint fails to enforce admin role authorization, letting any authenticated user modify runtime proxy configuration. By rewriting guardrails, callbacks, or custom-code hooks, an attacker can pivot to full remote code execution on the LiteLLM proxy host. Disclosed alongside CVE-2026-35030 in the April 2026 LiteLLM security update following the March 2026 supply-chain incident.",
+    "cve": "CVE-2026-35029",
+    "reference": "https://advisories.gitlab.com/pkg/pypi/litellm/CVE-2026-35029/",
+    "remediation": "Upgrade LiteLLM to 1.83.0 or later. Restrict /config/update to admin-scoped API keys only. Enable proxy audit logging. Review recent config mutations, callbacks, and custom-code hooks for malicious payloads. Isolate the LiteLLM proxy from sensitive data stores.",
+    "added_at": "2026-04-12"
+  },
+  {
+    "id": "THREAT-256",
+    "name": "vLLM video processing RCE (CVE-2026-22778)",
+    "match_patterns": {
+      "args_contains": ["vllm<0.14.1", "vllm==0.14.0", "vllm==0.13", "vllm==0.12", "vllm==0.11", "vllm==0.10", "vllm==0.9", "vllm==0.8"]
+    },
+    "severity": "critical",
+    "description": "Critical pre-auth RCE (CVSS 9.8) in vLLM 0.8.3-0.14.0. A malicious video_url submitted to the Completions or Invocations API triggers the multimodal video decode path, chaining a PIL information leak (to bypass ASLR) with a heap overflow in the JPEG2000 decoder used by OpenCV/FFmpeg. No authentication required. MCP servers that proxy user tool calls into a shared vLLM inference backend inherit the exposure.",
+    "cve": "CVE-2026-22778",
+    "reference": "https://github.com/vllm-project/vllm/security/advisories/GHSA-4r2x-xpjr-7cvv",
+    "remediation": "Upgrade vLLM to 0.14.1 or later. Disable the multimodal video pipeline if unused. Validate and allowlist video_url inputs at the MCP tool boundary. Run vLLM under a minimal seccomp profile and network-isolated from credential stores.",
+    "added_at": "2026-04-12"
+  },
+  {
+    "id": "THREAT-257",
+    "name": "vLLM video base64 frame-count bypass OOM DoS (CVE-2026-34755)",
+    "match_patterns": {
+      "args_contains": ["vllm<0.19.0", "VideoMediaIO"]
+    },
+    "severity": "high",
+    "description": "Denial of service in vLLM 0.7.0 through <0.19.0. VideoMediaIO.load_base64() at vllm/multimodal/media/video.py splits video/jpeg data URLs on commas to extract frames but does not enforce the num_frames=32 limit that the load_bytes() path applies. An attacker can submit a single API request with thousands of comma-separated base64 JPEGs, exhausting memory and OOM-killing the server. Amplified when called repeatedly against shared MCP agent infrastructure.",
+    "cve": "CVE-2026-34755",
+    "reference": "https://github.com/vllm-project/vllm/security/advisories/GHSA-8fr4-5q9j-m8gm",
+    "remediation": "Upgrade vLLM to 0.19.0 or later. Enforce request-size and frame-count limits at the API gateway. Rate-limit the multimodal endpoints. Monitor OOM kills and set container memory hard limits.",
+    "added_at": "2026-04-12"
+  },
+  {
+    "id": "THREAT-258",
+    "name": "vLLM OpenAI API unbounded n parameter DoS (CVE-2026-34756)",
+    "match_patterns": {
+      "args_contains": ["vllm<0.19.0", "vllm-openai"]
+    },
+    "severity": "medium",
+    "description": "Unauthenticated OOM denial of service in vLLM's OpenAI-compatible API server. The n parameter (number of completions per prompt) is not bounded, so a single /v1/completions or /v1/chat/completions request with a large n starves GPU memory and takes the inference backend offline. Relevant to MCP gateways that pass client-controlled sampling params straight into vLLM.",
+    "cve": "CVE-2026-34756",
+    "reference": "https://github.com/vllm-project/vllm/security/advisories",
+    "remediation": "Upgrade vLLM to 0.19.0 or later. Clamp the n parameter at the MCP/API gateway (e.g. n<=4). Reject unauthenticated traffic to the OpenAI API server. Add per-tenant concurrency quotas.",
+    "added_at": "2026-04-12"
+  },
+  {
+    "id": "THREAT-259",
+    "name": "mcp-memory-service information disclosure (CVE-2026-29787)",
+    "match_patterns": {
+      "server_names": ["mcp-memory-service", "mcp-memory"],
+      "args_contains": ["mcp-memory-service"]
+    },
+    "severity": "medium",
+    "description": "Information disclosure in mcp-memory-service. The memory-retrieval tool does not scope results by the calling session/agent, letting any connected MCP client read embeddings and raw memory entries written by other sessions. Multi-tenant deployments risk leaking prior conversations, API keys pasted into chat history, and retrieval-augmented context from unrelated users.",
+    "cve": "CVE-2026-29787",
+    "reference": "https://dailycve.com/mcp-memory-service-information-disclosure-cve-2026-29787-medium/",
+    "remediation": "Upgrade mcp-memory-service to the latest patched version. Enforce session/agent scoping on every memory tool handler, not just the retrieval UI. Encrypt memory entries per session. Purge existing memory stores in shared deployments and audit retrieval logs for cross-session hits.",
+    "added_at": "2026-04-12"
+  },
+  {
+    "id": "THREAT-260",
+    "name": "MCP tool definition rug pull -- post-approval silent redefinition",
+    "match_patterns": {
+      "args_contains": ["tools/list", "dynamic-tool-registration", "mcp-rug-pull", "silent-tool-redefinition"]
+    },
+    "severity": "high",
+    "description": "Rug-pull attack pattern documented by Invariant Labs, Elastic Security Labs, and Acuvity throughout Q1-Q2 2026. A previously benign MCP server waits for initial user approval, then silently mutates its tools/list response (or the underlying tool implementation) days or weeks later to add exfiltration side effects. Because most clients cache tool approval once and do not re-verify description hashes, the malicious redefinition takes effect silently across all connected agents. Common second-stage payloads include Discord/Slack webhook posting, email BCC, and prompt-injection strings embedded in tool descriptions. Detection is best-effort: watch for servers whose tools/list changes after first connection.",
+    "reference": "https://mcpmanager.ai/blog/mcp-rug-pull-attacks/",
+    "remediation": "Pin tool definition hashes at first approval and re-prompt users when descriptions change. Reject dynamic tools/list mutations unless signed. Adopt the ETDI proposal (OAuth-enhanced tool definitions + policy-based access control). Log every tools/list response and alert on drift. For CI agents, cache a known-good manifest of each MCP server and fail the build on mismatch.",
+    "added_at": "2026-04-12"
   }
 ]
