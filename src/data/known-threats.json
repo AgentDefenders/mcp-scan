@@ -3184,5 +3184,169 @@
     "reference": "https://mcpmanager.ai/blog/mcp-rug-pull-attacks/",
     "remediation": "Pin tool definition hashes at first approval and re-prompt users when descriptions change. Reject dynamic tools/list mutations unless signed. Adopt the ETDI proposal (OAuth-enhanced tool definitions + policy-based access control). Log every tools/list response and alert on drift. For CI agents, cache a known-good manifest of each MCP server and fail the build on mismatch.",
     "added_at": "2026-04-12"
+  },
+  {
+    "id": "THREAT-261",
+    "name": "mcp-framework unbounded request body DoS (CVE-2026-39313)",
+    "match_patterns": {
+      "server_names": ["mcp-framework"],
+      "args_contains": ["mcp-framework", "mcp-framework@0.2", "mcp-framework<0.2.22"]
+    },
+    "severity": "high",
+    "description": "Unauthenticated denial-of-service (GHSA-published 2026-04-16) in mcp-framework <=0.2.21. The HTTP transport's readRequestBody() concatenates request body chunks into a single string without honoring the documented maxMessageSize limit, so a single large POST to /mcp exhausts Node's V8 string heap and crashes the server. Any mcp-framework-built HTTP MCP server is reachable by unauthenticated attackers on the network, enabling trivial repeat-DoS and CI pipeline disruption.",
+    "cve": "CVE-2026-39313",
+    "reference": "https://www.thehackerwire.com/vulnerability/CVE-2026-39313/",
+    "remediation": "Upgrade mcp-framework to >=0.2.22. Enforce a reverse-proxy request-size limit (nginx client_max_body_size, Caddy request_body max_size) in front of any mcp-framework server. Add per-IP rate limiting on /mcp. Monitor for OOM restarts and 413 responses.",
+    "added_at": "2026-04-17"
+  },
+  {
+    "id": "THREAT-262",
+    "name": "mcp-server-kubernetes port_forward argument injection (CVE-2026-39884)",
+    "match_patterns": {
+      "server_names": ["mcp-server-kubernetes", "kubernetes-mcp", "flux159-mcp-server-kubernetes"],
+      "args_contains": ["mcp-server-kubernetes", "flux159/mcp-server-kubernetes", "kubectl port-forward"]
+    },
+    "severity": "high",
+    "description": "Argument-injection RCE (CWE-88) in Flux159 mcp-server-kubernetes <3.5.0. The port_forward tool builds a kubectl command by string concatenation of user input, then naively splits on spaces before passing to child_process.spawn(). A poisoned MCP tool call can smuggle extra kubectl flags (--kubeconfig, --server, --token, --namespace) to pivot cross-namespace, dump secrets from unrelated workloads, or forward ports against attacker-chosen clusters. Reachable indirectly via prompt injection against any agent connected to the MCP server.",
+    "cve": "CVE-2026-39884",
+    "reference": "https://radar.offseq.com/threat/cve-2026-39884-cwe-88-improper-neutralization-of-a-0e46c7ee",
+    "remediation": "Upgrade flux159/mcp-server-kubernetes to >=3.5.0. Replace string-spawn with argv arrays (child_process.execFile). Constrain the MCP process to a single namespace via a dedicated kubeconfig + role binding. Review audit logs for unexpected --kubeconfig or --server flags originating from MCP-driven kubectl invocations.",
+    "added_at": "2026-04-17"
+  },
+  {
+    "id": "THREAT-263",
+    "name": "Jaaz MCP STDIO configuration RCE (CVE-2026-30616)",
+    "match_patterns": {
+      "server_names": ["jaaz", "jaaz-mcp"],
+      "args_contains": ["jaaz", "jaaz==1.0.30", "jaaz<=1.0.30"]
+    },
+    "severity": "critical",
+    "description": "Critical unauthenticated RCE in Jaaz <=1.0.30 (published 2026-04-15). The network-accessible Jaaz app exposes an MCP management interface that lets anyone register an MCP STDIO server with arbitrary command and arguments. Any subsequent agent execution shells the attacker-supplied command, giving full code execution as the Jaaz service user. Representative of the Ox-Security-disclosed MCP STDIO 'execute first, validate never' pattern.",
+    "cve": "CVE-2026-30616",
+    "reference": "https://www.tenable.com/cve/CVE-2026-30616",
+    "remediation": "Upgrade Jaaz to the patched release (pending per vendor). Until patched, firewall the Jaaz MCP management interface from untrusted networks, disable dynamic MCP server registration, and require signed MCP server manifests. Audit Jaaz host processes for unexpected command lines and rotate any credentials reachable from the host.",
+    "added_at": "2026-04-17"
+  },
+  {
+    "id": "THREAT-264",
+    "name": "LangChain-ChatChat MCP STDIO RCE (CVE-2026-30617)",
+    "match_patterns": {
+      "server_names": ["langchain-chatchat", "chatchat"],
+      "args_contains": ["langchain-chatchat", "langchain-chatchat==0.3.1", "chatchat-space/Langchain-Chatchat"]
+    },
+    "severity": "critical",
+    "description": "RCE (CVSS 8.6) in LangChain-ChatChat 0.3.1 published 2026-04-15. The application ships a publicly reachable MCP management interface that accepts arbitrary STDIO server configurations. Once MCP is enabled for agent execution, every agent turn launches the attacker-configured command, yielding persistent code execution as the ChatChat service account and easy pivot to any LLM API keys, vector stores, or retrieval secrets on the host.",
+    "cve": "CVE-2026-30617",
+    "reference": "https://www.thehackerwire.com/langchain-chatchat-0-3-1-rce-via-mcp-stdio-server-configuration/",
+    "remediation": "Pin away from LangChain-ChatChat 0.3.1 until a patched release ships. Place an authenticated reverse proxy in front of the MCP management interface. Disable the STDIO transport for user-configurable MCP entries. Rotate all OpenAI/Anthropic/embedding keys reachable from the ChatChat host.",
+    "added_at": "2026-04-17"
+  },
+  {
+    "id": "THREAT-265",
+    "name": "excel-mcp-server path traversal arbitrary file R/W (CVE-2026-40576)",
+    "match_patterns": {
+      "server_names": ["excel-mcp-server", "excel-mcp"],
+      "args_contains": ["excel-mcp-server", "excel-mcp-server<=0.1.7", "excel-mcp-server==0.1.7"]
+    },
+    "severity": "critical",
+    "description": "Path traversal (GHSA-j98m-w3xp-9f56) in excel-mcp-server <=0.1.7 when running in SSE or Streamable-HTTP transport. All 25 exposed MCP tool handlers accept a filepath argument without sanitization, so an unauthenticated network attacker can supply ../ sequences to read, write, and overwrite arbitrary files the MCP process can touch -- including ~/.ssh/authorized_keys, shell rc files, Jenkins/CI config, or binaries on PATH.",
+    "cve": "CVE-2026-40576",
+    "reference": "https://advisories.gitlab.com/pypi/excel-mcp-server/CVE-2026-40576/",
+    "remediation": "Upgrade excel-mcp-server to >=0.1.8. Bind the MCP server to 127.0.0.1 when not intentionally exposed. Sandbox the process to a single workbook directory via chroot, container bind-mounts, or seccomp. Enforce a strict filepath allowlist (absolute path under workspace root only, no .. components).",
+    "added_at": "2026-04-17"
+  },
+  {
+    "id": "THREAT-266",
+    "name": "MCP Java-SDK DNS rebinding browser pivot (CVE-2026-35568)",
+    "match_patterns": {
+      "server_names": ["mcp-java-sdk"],
+      "args_contains": ["io.modelcontextprotocol.sdk", "mcp-core<1.0.0", "modelcontextprotocol/java-sdk"]
+    },
+    "severity": "high",
+    "description": "Origin-validation flaw (CWE-346, GHSA-8jxr-pr72-r468) in the official modelcontextprotocol java-sdk <1.0.0. The HTTP server transport fails to validate the Host header, so a victim's browser visiting an attacker-controlled page can resolve a hostile DNS name to 127.0.0.1 and issue cross-origin requests to the locally running Java MCP server, invoking its tools and exfiltrating any data the server exposes. Analogous to the prior Python/TypeScript SDK DNS-rebinding bugs.",
+    "cve": "CVE-2026-35568",
+    "reference": "https://github.com/modelcontextprotocol/java-sdk/security/advisories/GHSA-8jxr-pr72-r468",
+    "remediation": "Upgrade mcp-core to >=1.0.0. Enable the new Host header allowlist in every Java MCP server deployment. Bind to 127.0.0.1 only and firewall off loopback-plus-LAN access from browser traffic. For shared dev hosts, require Origin checks and CORS preflight on the MCP HTTP transport.",
+    "added_at": "2026-04-17"
+  },
+  {
+    "id": "THREAT-267",
+    "name": "mcp-handler cross-session response leak race condition (GHSA-w2fm-25vw-vh7f)",
+    "match_patterns": {
+      "server_names": ["mcp-handler"],
+      "args_contains": ["mcp-handler", "mcp-handler<1.1.0", "@modelcontextprotocol/sdk<1.26.0"]
+    },
+    "severity": "high",
+    "description": "Cross-client data-leak race condition (CWE-362) in mcp-handler <1.1.0 and underlying @modelcontextprotocol/sdk <1.26.0. When a single StreamableHTTPServerTransport instance is reused across concurrent HTTP clients, the shared server-side state (authentication context, tool-call results, user identity) can leak between sessions, so user A's tool response may be delivered to user B. High-impact for multi-tenant MCP gateways and hosted agent platforms.",
+    "reference": "https://advisories.gitlab.com/pkg/npm/mcp-handler/GHSA-w2fm-25vw-vh7f/",
+    "remediation": "Upgrade mcp-handler to >=1.1.0 and @modelcontextprotocol/sdk to >=1.26.0. Instantiate a fresh StreamableHTTPServerTransport per request/session. Add integration tests that interleave two authenticated clients and assert no cross-contamination. Audit logs for response delivery to the wrong session ID.",
+    "added_at": "2026-04-17"
+  },
+  {
+    "id": "THREAT-268",
+    "name": "Apollo MCP Server DNS rebinding auth bypass (CVE-2026-35577)",
+    "match_patterns": {
+      "server_names": ["apollo-mcp-server", "apollo-mcp"],
+      "args_contains": ["apollo-mcp-server", "apollo-mcp-server<1.7.0"]
+    },
+    "severity": "high",
+    "description": "DNS-rebinding authentication bypass in Apollo MCP Server <1.7.0. The StreamableHTTP transport does not validate the Host header, letting a malicious website bypass same-origin policy and invoke tools or read resources on the victim's locally running Apollo MCP server. Enables remote tool execution against developer workstations that happen to visit attacker-controlled sites while Apollo MCP is listening on localhost.",
+    "cve": "CVE-2026-35577",
+    "reference": "https://www.sentinelone.com/vulnerability-database/cve-2026-35577/",
+    "remediation": "Upgrade Apollo MCP Server to >=1.7.0 (adds Host-header allowlisting). Bind to 127.0.0.1 only. Require authentication tokens for all tool invocations. Consider running MCP servers inside an isolated browser profile or loopback-only namespace when not in active use.",
+    "added_at": "2026-04-17"
+  },
+  {
+    "id": "THREAT-269",
+    "name": "MaxKB MCP node OS command injection (CVE-2026-6108)",
+    "match_patterns": {
+      "server_names": ["maxkb", "maxkb-mcp"],
+      "args_contains": ["1panel-dev/maxkb", "maxkb<=2.6.1", "MaxKB"]
+    },
+    "severity": "medium",
+    "description": "OS command injection in 1Panel-dev MaxKB <=2.6.1 via the execute function in the Model Context Protocol Node component. Remote attackers can inject shell metacharacters into MCP node parameters to run arbitrary OS commands as the MaxKB service user. Exploit code is public. Relevant to any knowledge-base deployment that lets users define MCP nodes in workflows.",
+    "cve": "CVE-2026-6108",
+    "reference": "https://radar.offseq.com/threat/cve-2026-6108-os-command-injection-in-1panel-dev-m-0d8b3931",
+    "remediation": "Upgrade MaxKB beyond 2.6.1 once patched. Restrict who can author MCP nodes (admin-only). Run MaxKB workers under a dedicated unprivileged UID with no access to host secrets. Audit workflow execution logs for unexpected shell invocations and rotate credentials that the worker could reach.",
+    "added_at": "2026-04-17"
+  },
+  {
+    "id": "THREAT-270",
+    "name": "MCP STDIO 'execute first, validate never' systemic flaw (Ox Security, April 2026)",
+    "match_patterns": {
+      "args_contains": ["StdioServerTransport", "stdio_client", "mcp.client.stdio", "spawn-on-configure"]
+    },
+    "severity": "high",
+    "description": "Systemic MCP protocol flaw disclosed by Ox Security on 2026-04-15 after a months-long audit (30+ responsible disclosures, 10+ Critical/High CVEs). The STDIO transport in the official Anthropic MCP SDKs (Python, TypeScript, Java, Rust) starts the configured command *before* validating it, and continues executing user input even when the server fails to launch. Affects 200+ open-source projects, 150M+ downloads, 7000+ publicly reachable servers, and ~200,000 vulnerable instances. Anthropic declined an architectural change, calling the behavior 'expected,' and instead added a policy warning that STDIO MCP adapters should be used with caution. This is the common root cause behind CVE-2026-30616 (Jaaz), CVE-2026-30617 (LangChain-ChatChat), and CVE-2026-33032 (nginx-ui).",
+    "reference": "https://www.theregister.com/2026/04/16/anthropic_mcp_design_flaw/",
+    "remediation": "Treat every MCP STDIO server config as untrusted input. Require strict allowlists of command binaries, reject user-supplied absolute paths, and run the MCP spawner under a dedicated UID / container. Prefer HTTP+auth transports with Host-header validation over STDIO for hosted agents. Monitor for MCP config mutations post-deployment. When embedding a Anthropic MCP SDK, pin to the versions carrying the April 2026 mitigations.",
+    "added_at": "2026-04-17"
+  },
+  {
+    "id": "THREAT-271",
+    "name": "Claude Code project settings hooks/MCP RCE + token exfil (CVE-2025-59536 / CVE-2026-21852)",
+    "match_patterns": {
+      "args_contains": [".claude/settings.json", "claude-code-hook", "claude_code_hooks", "ANTHROPIC_API_KEY"]
+    },
+    "severity": "critical",
+    "description": "Check Point Research disclosure: Anthropic Claude Code <=1.0.73 honored project-local .claude/settings.json on open, letting any repo author register malicious Hooks, MCP servers, or env vars that shell-execute on clone and exfiltrate ANTHROPIC_API_KEY. Triggered by simply opening an untrusted repository in Claude Code. Patched prior to disclosure by Anthropic, but agent operators running older Claude Code builds, CI runners that auto-trust project configs, or custom forks remain vulnerable.",
+    "cve": "CVE-2025-59536",
+    "reference": "https://research.checkpoint.com/2026/rce-and-api-token-exfiltration-through-claude-code-project-files-cve-2025-59536/",
+    "remediation": "Upgrade Claude Code to the patched release (>=1.0.74). Disable auto-trust of .claude/settings.json in CI. Scan repositories for .claude/settings.json before first open. Rotate ANTHROPIC_API_KEY on any host that opened an untrusted repo with an older Claude Code build. Review .claude/settings.json and .claude/hooks/ paths in supply-chain scanning.",
+    "added_at": "2026-04-17"
+  },
+  {
+    "id": "THREAT-272",
+    "name": "Splunk MCP Server cleartext session/auth token leak (CVE-2026-20205)",
+    "match_patterns": {
+      "server_names": ["splunk-mcp-server", "splunk-mcp"],
+      "args_contains": ["splunk-mcp-server", "splunk-mcp-server<1.0.3", "mcp_tool_admin"]
+    },
+    "severity": "medium",
+    "description": "Information disclosure in Splunk MCP Server <1.0.3. Users with access to the _internal index or holding the high-privilege mcp_tool_admin capability can read other users' Splunk session and authorization tokens in cleartext from MCP audit logs. Published 2026-04-14, updated 2026-04-15. Enables low-friction horizontal privilege escalation inside a Splunk tenant whenever MCP tooling is enabled.",
+    "cve": "CVE-2026-20205",
+    "reference": "https://advisory.splunk.com/advisories",
+    "remediation": "Upgrade Splunk MCP Server to >=1.0.3 (logs are redacted, the token field is hashed). Restrict the mcp_tool_admin capability to break-glass accounts only. Review _internal index ACLs and purge historical MCP logs that contain live tokens. Rotate any Splunk session tokens visible to non-admin users since MCP Server was enabled.",
+    "added_at": "2026-04-17"
   }
 ]
